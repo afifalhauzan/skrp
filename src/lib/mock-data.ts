@@ -112,6 +112,14 @@ uang = 25000
 
 total = harga_1 + harga_2 + harga_3
 print(f"Total: {total}")`;
+export const flowchartTemplate = `flowchart TD
+  A([Mulai]) --> B[/Baca input/]
+  B --> C{Kondisi?}
+  C -- Ya --> D[Proses A]
+  C -- Tidak --> E[Proses B]
+  D --> F[/Tampilkan hasil/]
+  E --> F
+  F --> G([Selesai])`;
 export const initialProgress = (): ProgressState => ({
   loggedIn: false,
   studentName: "",
@@ -119,6 +127,7 @@ export const initialProgress = (): ProgressState => ({
   completedStages: {},
   problemSpecs: {},
   pseudocode: {},
+  flowchart: {},
   code: {},
   execution: {},
   tested: {},

@@ -3,8 +3,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Assistant } from "./Assistant";
 import { Button, Card, Label, Shell } from "./Shell";
+import { FlowchartEditor } from "./FlowchartEditor";
 import { ProgressBar } from "./ProgressBar";
-import { blankSpec, defaultCode, getCase, stages } from "@/lib/mock-data";
+import {
+  blankSpec,
+  defaultCode,
+  flowchartTemplate,
+  getCase,
+  stages,
+} from "@/lib/mock-data";
 import { loadProgress, saveProgress } from "@/lib/persistence";
 import type { ProblemSpec, ProgressState, StageId } from "@/lib/types";
 
@@ -117,10 +124,17 @@ export function Workspace({
               {current === "design" && (
                 <Design
                   value={progress.pseudocode[caseId] ?? ""}
+                  flowchart={progress.flowchart[caseId] ?? ""}
                   onChange={(value) =>
                     update({
                       ...progress,
                       pseudocode: { ...progress.pseudocode, [caseId]: value },
+                    })
+                  }
+                  onFlowchartChange={(value) =>
+                    update({
+                      ...progress,
+                      flowchart: { ...progress.flowchart, [caseId]: value },
                     })
                   }
                 />
@@ -240,18 +254,26 @@ function Understand({
 }
 function Design({
   value,
+  flowchart,
   onChange,
+  onFlowchartChange,
 }: {
   value: string;
+  flowchart: string;
   onChange: (value: string) => void;
+  onFlowchartChange: (value: string) => void;
 }) {
   return (
     <div className="space-y-5">
       <div className="rounded-xl bg-[#f2f7f3] p-4 text-sm leading-6 text-muted">
-        Susun algoritma dalam langkah-langkah singkat. Flowchart visual lengkap
-        akan menjadi pengembangan berikutnya; area ini adalah representasi
-        placeholder yang dapat diedit.
+        Susun algoritma dalam langkah-langkah singkat, lalu gambarkan sebagai
+        flowchart.
       </div>
+      <FlowchartEditor
+        value={flowchart}
+        template={flowchartTemplate}
+        onChange={onFlowchartChange}
+      />
       <div>
         <Label>Pseudocode</Label>
         <textarea

@@ -38,6 +38,7 @@ export interface ProgressState {
   completedStages: Record<string, StageId[]>;
   problemSpecs: Record<string, ProblemSpec>;
   pseudocode: Record<string, string>;
+  flowchart: Record<string, string>;
   code: Record<string, string>;
   execution: Record<string, ExecutionResult | undefined>;
   tested: Record<string, boolean>;

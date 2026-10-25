@@ -37,5 +37,5 @@ State prototype disimpan di `localStorage` dengan key `pyscaffold-progress-v1`. 
 
 - Eksekusi Python dan test runner sengaja berupa hasil simulasi yang diberi label jelas; tidak ada Python sandbox atau AI API.
 - Routing kasus menggunakan fixture tetap (Kasus 1 → 2 → 3), karena PRD belum menetapkan rubric numerik atau ambang routing.
-- Pseudocode adalah editor teks; flowchart visual dan riwayat revisi penuh menjadi pekerjaan lanjutan.
+- Pseudocode adalah editor teks; flowchart memakai editor teks Mermaid dengan pratinjau langsung (disimpan sebagai string di `progress.flowchart[caseId]`, sehingga draf dari BE/AI cukup menggantinya); riwayat revisi penuh menjadi pekerjaan lanjutan.
 - Figma MCP tersedia di `.vscode/mcp.json`; frame desktop terpilih digunakan sebagai referensi komposisi, sementara node berisi beberapa frame aplikasi.
