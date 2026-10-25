@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Shell } from "@/components/Shell";
-import { getCase } from "@/lib/mock-data";
+import { getCase } from "@/lib/data";
 import { loadProgress } from "@/lib/persistence";
 export default function Mission() {
   const router = useRouter();
@@ -101,11 +101,8 @@ export default function Mission() {
           </Button>
         </section>
         <footer className="mt-8 flex justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
-          <span>
-            Workspace Status: Ready · Env: PY-3.11-Sandbox · Latensi Runtime:
-            24ms
-          </span>
-          <span>● Autosave State: Active (Local Memory)</span>
+          <span>Siap dikerjakan · Python 3</span>
+          <span>● Progres tersimpan otomatis</span>
         </footer>
       </main>
     </Shell>

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Shell } from "@/components/Shell";
-import { cases } from "@/lib/mock-data";
+import { cases } from "@/lib/data";
 import { loadProgress, resetProgress, saveProgress } from "@/lib/persistence";
 export default function FinalReview() {
   const router = useRouter();
@@ -89,7 +89,7 @@ export default function FinalReview() {
         </div>
         <div className="mt-8 flex justify-end">
           <Button variant="ghost" onClick={reset}>
-            Reset prototype state
+            Mulai ulang dari awal
           </Button>
         </div>
       </main>

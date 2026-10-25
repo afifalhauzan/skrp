@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Shell } from "@/components/Shell";
-import { cases, getCase, stages } from "@/lib/mock-data";
+import { cases, getCase, stages } from "@/lib/data";
 import { loadProgress } from "@/lib/persistence";
 export default function CaseReview({ params }: { params: { caseId: string } }) {
   const router = useRouter();
@@ -29,7 +29,7 @@ export default function CaseReview({ params }: { params: { caseId: string } }) {
         </h1>
         <p className="mt-3 max-w-2xl text-muted">
           {complete
-            ? "Semua artefak untuk kasus ini sudah tersimpan. Berikutnya adalah keputusan routing mock."
+            ? "Semua artefak untuk kasus ini sudah tersimpan. Berikutnya adalah misi selanjutnya."
             : "Selesaikan setiap tahap untuk melihat evaluasi kasus."}
         </p>
         <Card className="mt-8">
@@ -61,7 +61,7 @@ export default function CaseReview({ params }: { params: { caseId: string } }) {
         {complete && (
           <Card className="mt-5 border-teal/20 bg-[#f2faf6]">
             <p className="text-xs font-bold uppercase tracking-widest text-teal">
-              Routing mock
+              Langkah berikutnya
             </p>
             <h2 className="mt-2 text-xl font-bold text-navy">
               {next
@@ -70,7 +70,7 @@ export default function CaseReview({ params }: { params: { caseId: string } }) {
             </h2>
             <p className="mt-2 text-sm leading-6 text-muted">
               {next
-                ? "Prototype fixture mengarahkan kasus ini ke misi berikutnya. Keputusan ini bukan ambang pedagogis final."
+                ? "Kamu siap melanjutkan ke misi berikutnya."
                 : "Semua kasus utama telah diselesaikan."}
             </p>
             <Button href={next ? `/learn/${next}/understand` : "/final-review"}>

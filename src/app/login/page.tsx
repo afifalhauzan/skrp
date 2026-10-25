@@ -10,7 +10,7 @@ export default function Login() {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!["PY2026", "BELAJAR", "MALANG"].includes(code.trim().toUpperCase())) {
-      setError("Kode belum dikenali. Coba PY2026 untuk masuk ke prototype.");
+      setError("Kode belum dikenali. Coba PY2026 untuk masuk.");
       return;
     }
     const p = loadProgress();
@@ -53,7 +53,7 @@ export default function Login() {
             <Button type="submit">Masuk ke pembelajaran →</Button>
           </form>
           <p className="mt-5 text-xs text-muted">
-            Prototype code: PY2026 · BELAJAR · MALANG
+            Kode akses: PY2026 · BELAJAR · MALANG
           </p>
         </Card>
       </main>

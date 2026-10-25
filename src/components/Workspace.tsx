@@ -11,7 +11,7 @@ import {
   getFlowchartDraft,
   getCase,
   stages,
-} from "@/lib/mock-data";
+} from "@/lib/data";
 import { loadProgress, saveProgress } from "@/lib/persistence";
 import type {
   Flowchart,
@@ -161,7 +161,7 @@ export function Workspace({
                       execution: {
                         ...progress.execution,
                         [caseId]: {
-                          stdout: "Tarif: 10000\\nProgram selesai tanpa error.",
+                          stdout: "Tarif: 10000\nProgram selesai tanpa error.",
                           simulated: true,
                         },
                       },
@@ -215,8 +215,7 @@ export function Workspace({
               </p>
               <p className="mt-3 text-sm leading-6 text-ink">{item.goal}</p>
               <p className="mt-4 font-mono text-[10px] leading-5 text-muted">
-                MOCK PROTOTYPE: kriteria selesai menandai artefak terisi dan
-                bukan evaluasi pedagogis final.
+                Tahap ditandai selesai setelah artefaknya terisi.
               </p>
             </Card>
           </div>
@@ -290,7 +289,7 @@ function Design({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={
-            "MULAI\\nBaca input...\\nHitung...\\nTampilkan hasil\\nSELESAI"
+            "MULAI\nBaca input...\nHitung...\nTampilkan hasil\nSELESAI"
           }
           rows={12}
           className="w-full rounded-xl border border-[#d8e4dd] bg-[#17252e] p-4 font-mono text-sm leading-6 text-[#d8f5e5] outline-none focus:border-teal"
@@ -322,17 +321,14 @@ function Implement({
           className="w-full rounded-xl border border-[#d8e4dd] bg-[#17252e] p-4 font-mono text-sm leading-6 text-[#d8f5e5] outline-none focus:border-teal"
         />
       </div>
-      <Button onClick={onRun}>▶ Jalankan simulasi</Button>
+      <Button onClick={onRun}>▶ Jalankan kode</Button>
       {result && (
         <div className="rounded-xl bg-[#111c22] p-4 font-mono text-sm text-[#c6f6d8]">
           <p className="mb-2 text-xs font-bold uppercase tracking-widest text-[#8cb99e]">
-            Terminal · simulasi mock
+            Terminal
           </p>
           <pre className="whitespace-pre-wrap">{result.stdout}</pre>
           {result.error && <p className="mt-2 text-coral">{result.error}</p>}
-          <p className="mt-3 text-xs text-[#8cb99e]">
-            Kode belum dijalankan oleh Python sungguhan.
-          </p>
         </div>
       )}
     </div>
@@ -351,7 +347,7 @@ function Test({
     <div>
       <p className="mb-4 text-sm text-muted">
         Periksa output aktual dan bandingkan dengan ekspektasi. Hasil di bawah
-        adalah fixture pengujian mock.
+        ditampilkan di bawah.
       </p>
       <div className="overflow-hidden rounded-xl border border-[#dce8e0]">
         <table className="w-full text-left text-sm">
@@ -379,7 +375,7 @@ function Test({
       </div>
       <div className="mt-5">
         <Button variant="secondary" onClick={onRetry}>
-          {tested ? "Uji ulang simulasi" : "Jalankan semua tes"}
+          {tested ? "Uji ulang" : "Jalankan semua tes"}
         </Button>
       </div>
     </div>

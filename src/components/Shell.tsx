@@ -25,7 +25,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </Link>
           </nav>
           <div className="font-mono text-[10px] uppercase tracking-widest text-muted">
-            ENV: MOCK_SANDBOX
+            Belajar Python
           </div>
         </div>
       </header>

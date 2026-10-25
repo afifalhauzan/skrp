@@ -1,4 +1,4 @@
-import { stages } from "@/lib/mock-data";
+import { stages } from "@/lib/data";
 import type { StageId } from "@/lib/types";
 export function ProgressBar({
   caseId,

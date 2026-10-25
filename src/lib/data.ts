@@ -136,7 +136,7 @@ const link = (
   targetHandle,
   label,
 });
-/** Mock scaffold drafts; later replaced by a BE/AI response of the same shape. */
+/** Draf awal flowchart per kasus; dapat digantikan respons BE/AI dengan bentuk yang sama. */
 export const flowchartDrafts: Record<string, Flowchart> = {
   "case-1": {
     nodes: [

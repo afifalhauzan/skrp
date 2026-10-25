@@ -1,5 +1,5 @@
 import type { ProgressState } from "./types";
-import { initialProgress } from "./mock-data";
+import { initialProgress } from "./data";
 const KEY = "pyscaffold-progress-v1";
 export function loadProgress(): ProgressState {
   if (typeof window === "undefined") return initialProgress();
