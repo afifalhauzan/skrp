@@ -1,8 +1,22 @@
 "use client";
+import { containerCls } from "@/lib/ui";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Shell } from "@/components/Shell";
+import { Shell } from "@/components/Shell";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { loadProgress, saveProgress } from "@/lib/persistence";
+import { cn } from "@/lib/utils";
+
 export default function Login() {
   const router = useRouter();
   const [code, setCode] = useState("");
@@ -19,42 +33,48 @@ export default function Login() {
   };
   return (
     <Shell>
-      <main className="mx-auto grid min-h-[calc(100vh-81px)] max-w-5xl place-items-center px-6 py-16">
+      <main
+        className={cn(containerCls, "grid place-items-center py-10 sm:py-16")}
+      >
         <Card className="w-full max-w-md">
-          <p className="mb-3 text-sm font-bold text-teal">
-            Selamat datang kembali
-          </p>
-          <h1 className="text-3xl font-bold text-navy">Masukkan kode akses</h1>
-          <p className="mt-3 text-sm leading-6 text-muted">
-            Gunakan kode yang diberikan guru untuk membuka perjalanan belajar.
-          </p>
-          <form onSubmit={submit} className="mt-7">
-            <label
-              htmlFor="code"
-              className="mb-2 block text-sm font-bold text-navy"
-            >
-              Kode akses
-            </label>
-            <input
-              id="code"
-              value={code}
-              onChange={(e) => {
-                setCode(e.target.value);
-                setError("");
-              }}
-              placeholder="Contoh: PY2026"
-              className="w-full rounded-xl border border-[#d8e4dd] px-4 py-3 uppercase outline-none focus:border-teal focus:ring-2 focus:ring-mint"
-            />
-            {error && (
-              <p role="alert" className="mt-3 text-sm font-bold text-coral">
-                {error}
-              </p>
-            )}
-            <Button type="submit">Masuk ke pembelajaran →</Button>
-          </form>
-          <p className="mt-5 text-xs text-muted">
-            Kode akses: PY2026 · BELAJAR · MALANG
-          </p>
+          <CardHeader>
+            <CardDescription>Selamat datang kembali</CardDescription>
+            <CardTitle className="font-heading text-2xl">
+              Masukkan kode akses
+            </CardTitle>
+            <CardDescription>
+              Gunakan kode yang diberikan guru untuk membuka perjalanan belajar.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={submit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="code">Kode akses</Label>
+                <Input
+                  id="code"
+                  value={code}
+                  onChange={(e) => {
+                    setCode(e.target.value);
+                    setError("");
+                  }}
+                  placeholder="Contoh: PY2026"
+                  className="h-10 uppercase"
+                  autoComplete="off"
+                />
+              </div>
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              <Button type="submit" size="lg" className="w-full">
+                Masuk ke pembelajaran
+              </Button>
+            </form>
+            <p className="mt-4 text-xs text-muted-foreground">
+              Kode akses: PY2026 · BELAJAR · MALANG
+            </p>
+          </CardContent>
         </Card>
       </main>
     </Shell>

@@ -19,7 +19,8 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Label } from "./Shell";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import type { FlowNode, FlowNodeKind, Flowchart } from "@/lib/types";
 
 type FlowData = { kind: FlowNodeKind; label: string; origin: "ai" | "student" };
@@ -86,7 +87,7 @@ export function validateFlowchart(f: Flowchart): string[] {
   return issues;
 }
 
-const handleCls = "!h-2.5 !w-2.5 !border-ink !bg-white";
+const handleCls = "!h-2.5 !w-2.5 !border-foreground !bg-background";
 const sides = [
   ["t", Position.Top],
   ["r", Position.Right],
@@ -100,16 +101,16 @@ function FlowNodeView({ id, data, selected }: NodeProps<RfNode>) {
   const shaped = data.kind === "io" || data.kind === "decision";
   const points =
     data.kind === "decision" ? "50,2 98,50 50,98 2,50" : "12,2 98,2 88,98 2,98";
-  const box = `relative flex items-center justify-center px-3 text-center text-xs font-semibold text-ink ${
+  const box = `relative flex items-center justify-center px-3 text-center text-xs font-semibold text-foreground ${
     data.kind === "decision" ? "h-24 w-44" : "h-14 w-44"
-  } ${shaped ? "" : "border-2 bg-white"} ${
+  } ${shaped ? "" : "border-2 bg-background"} ${
     data.kind === "start" || data.kind === "end" ? "rounded-full" : ""
   } ${
     selected
-      ? "border-teal"
+      ? "border-primary"
       : data.origin === "ai"
-        ? "border-dashed border-teal/70"
-        : "border-ink"
+        ? "border-dashed border-primary/70"
+        : "border-foreground"
   }`;
   return (
     <div className={box} onDoubleClick={() => setEditing(true)}>
@@ -124,7 +125,7 @@ function FlowNodeView({ id, data, selected }: NodeProps<RfNode>) {
             fill="white"
             strokeWidth={selected ? 3 : 2}
             vectorEffect="non-scaling-stroke"
-            className={selected ? "stroke-teal" : "stroke-ink"}
+            className={selected ? "stroke-primary" : "stroke-foreground"}
             strokeDasharray={data.origin === "ai" ? "5 3" : undefined}
           />
         </svg>
@@ -149,7 +150,7 @@ function FlowNodeView({ id, data, selected }: NodeProps<RfNode>) {
         <span className="relative z-10 break-words">{data.label}</span>
       )}
       {data.origin === "ai" && (
-        <span className="absolute -top-2 right-2 z-10 bg-teal px-1 font-mono text-[8px] text-white">
+        <span className="absolute -top-2 right-2 z-10 bg-primary px-1 rounded text-[9px] font-semibold text-primary-foreground">
           AI
         </span>
       )}
@@ -184,7 +185,9 @@ function Canvas({
     toRf(initial).edges,
   );
   const { screenToFlowPosition, getNodes } = useReactFlow<RfNode>();
-  const last = useRef(JSON.stringify(initial));
+  const last = useRef(
+    JSON.stringify(fromRf(toRf(initial).nodes, toRf(initial).edges)),
+  );
   const counter = useRef(0);
 
   // Student edits flow up; a different `value` from outside (e.g. a BE/AI draft) flows in.
@@ -197,10 +200,10 @@ function Canvas({
   }, [nodes, edges, onChange]);
   useEffect(() => {
     if (!value) return;
-    const json = JSON.stringify(value);
+    const rf = toRf(value);
+    const json = JSON.stringify(fromRf(rf.nodes, rf.edges));
     if (json === last.current) return;
     last.current = json;
-    const rf = toRf(value);
     setNodes(rf.nodes);
     setEdges(rf.edges);
   }, [value, setNodes, setEdges]);
@@ -252,25 +255,27 @@ function Canvas({
     <>
       <div className="mb-2 flex flex-wrap gap-1">
         {(Object.keys(kindLabels) as FlowNodeKind[]).map((kind) => (
-          <button
+          <Button
             key={kind}
             type="button"
+            variant="outline"
+            size="sm"
             onClick={() => addNode(kind)}
-            className="border border-ink bg-white px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-ink hover:bg-mint"
           >
             + {kindLabels[kind]}
-          </button>
+          </Button>
         ))}
-        <button
+        <Button
           type="button"
+          variant="destructive"
+          size="sm"
           onClick={removeSelected}
-          className="border border-coral bg-white px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-coral hover:bg-[#fff1ee]"
         >
           Hapus terpilih
-        </button>
+        </Button>
       </div>
       <div
-        className="h-[460px] rounded-xl border border-[#d8e4dd] bg-[#fbfdfb]"
+        className="h-[460px] rounded-xl border bg-background"
         data-testid="flowchart-canvas"
       >
         <ReactFlow
@@ -303,17 +308,13 @@ function Canvas({
         </ReactFlow>
       </div>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-        <p className="font-mono text-[10px] leading-5 text-muted">
+        <p className="text-xs leading-5 text-muted-foreground">
           Seret node · tarik dari titik tepi untuk menyambung · klik dua kali
           node/panah untuk ubah label · node &quot;AI&quot; = draf awal
         </p>
-        <button
-          type="button"
-          onClick={reset}
-          className="font-mono text-[10px] uppercase tracking-widest text-teal underline"
-        >
+        <Button type="button" variant="link" size="sm" onClick={reset}>
           Reset ke draf
-        </button>
+        </Button>
       </div>
     </>
   );
@@ -332,7 +333,7 @@ export function FlowchartEditor(props: {
         <Canvas {...props} />
       </ReactFlowProvider>
       {issues.length > 0 && (
-        <ul className="mt-3 list-disc rounded-xl bg-[#fff6f3] py-2 pl-7 pr-3 text-xs leading-5 text-coral">
+        <ul className="mt-3 list-disc rounded-xl bg-destructive/10 py-2 pl-7 pr-3 text-xs leading-5 text-destructive">
           {issues.map((i) => (
             <li key={i}>{i}</li>
           ))}

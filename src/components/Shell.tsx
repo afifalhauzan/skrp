@@ -1,79 +1,83 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { GraduationCap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { containerCls } from "@/lib/ui";
+import { cn } from "@/lib/utils";
 
 export function Shell({ children }: { children: React.ReactNode }) {
-  const path = usePathname();
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-[#d9e4ee] bg-[#f5faff]">
-        <div className="mx-auto flex h-14 max-w-[1232px] items-center justify-between px-6">
+    <div className="flex min-h-screen flex-col bg-muted/40">
+      <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur">
+        <div
+          className={cn(containerCls, "flex h-14 items-center justify-between")}
+        >
           <Link
             href="/"
-            className="font-mono text-xs font-bold uppercase tracking-widest text-ink"
+            className="flex items-center gap-2 font-heading text-base font-semibold"
           >
-            [ PyScaffold ]
+            <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
+              <GraduationCap className="size-4" />
+            </span>
+            PyScaffold
           </Link>
-          <nav className="hidden items-center gap-7 font-mono text-[10px] uppercase tracking-widest text-muted md:flex">
-            {path !== "/" && (
-              <Link href="/mission" className="hover:text-ink">
-                Misi belajar
-              </Link>
-            )}
-            <Link href="/final-review" className="hover:text-ink">
+          <nav className="flex items-center gap-1 text-sm">
+            <Button
+              variant="ghost"
+              size="sm"
+              render={<Link href="/mission" />}
+              nativeButton={false}
+            >
+              Misi belajar
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              render={<Link href="/final-review" />}
+              nativeButton={false}
+            >
               Perjalanan saya
-            </Link>
+            </Button>
           </nav>
-          <div className="font-mono text-[10px] uppercase tracking-widest text-muted">
-            Belajar Python
-          </div>
         </div>
       </header>
-      {children}
+      <div className="flex-1">{children}</div>
+      <footer className="border-t bg-background">
+        <div
+          className={cn(
+            containerCls,
+            "flex flex-col gap-2 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between",
+          )}
+        >
+          <p>
+            <span className="font-heading font-semibold text-foreground">
+              PyScaffold
+            </span>{" "}
+            · Media pembelajaran algoritma dan Python untuk SMA kelas XII
+          </p>
+          <nav className="flex gap-4">
+            <Link href="/mission" className="hover:text-foreground">
+              Misi belajar
+            </Link>
+            <Link href="/final-review" className="hover:text-foreground">
+              Perjalanan saya
+            </Link>
+            <Link href="/login" className="hover:text-foreground">
+              Masuk
+            </Link>
+          </nav>
+        </div>
+      </footer>
     </div>
   );
 }
-export function Button({
-  children,
+
+type ButtonProps = React.ComponentProps<typeof Button>;
+export function LinkButton({
   href,
-  onClick,
-  variant = "primary",
-  type = "button",
-  disabled,
-}: {
-  children: React.ReactNode;
-  href?: string;
-  onClick?: () => void;
-  variant?: "primary" | "secondary" | "ghost";
-  type?: "button" | "submit";
-  disabled?: boolean;
-}) {
-  const cls = `inline-flex items-center justify-center px-5 py-3 font-mono text-[11px] uppercase tracking-widest transition ${variant === "primary" ? "bg-black text-white hover:bg-[#29323b]" : variant === "secondary" ? "bg-[#e9eef5] text-ink hover:bg-[#dfe8f2]" : "text-muted underline underline-offset-4 hover:text-ink"} ${disabled ? "cursor-not-allowed opacity-50" : ""}`;
-  return href ? (
-    <Link className={cls} href={href}>
-      {children}
-    </Link>
-  ) : (
-    <button className={cls} onClick={onClick} type={type} disabled={disabled}>
-      {children}
-    </button>
-  );
-}
-export function Card({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+  ...props
+}: Omit<ButtonProps, "render" | "nativeButton"> & { href: string }) {
   return (
-    <section className={`border border-[#e2e9f0] bg-white p-6 ${className}`}>
-      {children}
-    </section>
-  );
-}
-export function Label({ children }: { children: React.ReactNode }) {
-  return (
-    <label className="mb-2 block text-sm font-bold text-navy">{children}</label>
+    <Button render={<Link href={href} />} nativeButton={false} {...props} />
   );
 }

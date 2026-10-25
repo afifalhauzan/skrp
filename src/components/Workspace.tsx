@@ -1,14 +1,23 @@
 "use client";
+import { containerCls } from "@/lib/ui";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Play } from "lucide-react";
 import { Assistant } from "./Assistant";
-import { Button, Card, Label, Shell } from "./Shell";
+import { LinkButton, Shell } from "./Shell";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import { FlowchartEditor } from "./FlowchartEditor";
 import { ProgressBar } from "./ProgressBar";
 import {
   blankSpec,
   defaultCode,
   getFlowchartDraft,
+  initialProgress,
   getCase,
   stages,
 } from "@/lib/data";
@@ -32,15 +41,22 @@ export function Workspace({
   const current = (
     stages.some((s) => s.id === stageId) ? stageId : "understand"
   ) as StageId;
-  const [progress, setProgress] = useState<ProgressState>(() => loadProgress());
+  const [progress, setProgress] = useState<ProgressState>(initialProgress);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    setProgress(loadProgress());
+    setReady(true);
+  }, []);
   const [message, setMessage] = useState("");
   const completed = progress.completedStages[caseId] ?? [];
   const spec = progress.problemSpecs[caseId] ?? blankSpec;
   const update = (next: ProgressState) => {
+    if (!ready) return;
     setProgress(next);
     saveProgress(next);
   };
   useEffect(() => {
+    if (!ready) return;
     if (!progress.loggedIn) {
       router.replace("/login");
       return;
@@ -52,7 +68,7 @@ export function Workspace({
     if (stageIndex > firstIncomplete && firstIncomplete >= 0) {
       router.replace(`/learn/${caseId}/${stages[firstIncomplete].id}`);
     }
-  }, [caseId, completed, current, progress.loggedIn, router]);
+  }, [caseId, completed, current, progress.loggedIn, ready, router]);
   const go = (id: StageId) => router.push(`/learn/${caseId}/${id}`);
   const markComplete = (id: StageId) => {
     const next = Array.from(
@@ -76,20 +92,20 @@ export function Workspace({
   const title = stages.find((s) => s.id === current)?.label ?? "";
   return (
     <Shell>
-      <main className="mx-auto max-w-[1024px] px-8 pb-12 pt-8">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <main className={cn(containerCls, "pb-12 pt-5 sm:pt-8")}>
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="mb-2 bg-black px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-white">
-              [ Kasus {String(item.number).padStart(2, "0")} Aktif ]
-            </p>
-            <h1 className="text-2xl font-bold uppercase tracking-tight text-ink">
+            <Badge>Kasus {item.number} aktif</Badge>
+            <h1 className="mt-2 font-heading text-xl font-bold sm:text-2xl">
               {item.title}
             </h1>
-            <p className="mt-2 max-w-2xl text-sm text-muted">{item.context}</p>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              {item.context}
+            </p>
           </div>
-          <Button variant="secondary" href={`/case-review/${caseId}`}>
-            [ Lihat Progres ]
-          </Button>
+          <LinkButton href={`/case-review/${caseId}`} variant="outline">
+            Lihat progres
+          </LinkButton>
         </div>
         <ProgressBar
           caseId={caseId}
@@ -97,20 +113,26 @@ export function Workspace({
           completed={completed}
           onNavigate={go}
         />
-        <div className="mt-6 grid gap-5 lg:grid-cols-[1fr_290px]">
-          <div>
-            <Card>
-              <div className="mb-6 flex items-start justify-between border-b border-[#dfe8f1] pb-5">
+        <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_290px]">
+          <Card>
+            <CardContent>
+              <div className="mb-5 flex items-start justify-between gap-3 border-b pb-4">
                 <div>
-                  <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
-                    Tahap {stages.findIndex((s) => s.id === current) + 1} //
-                    Workspace
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Tahap {stages.findIndex((s) => s.id === current) + 1} dari{" "}
+                    {stages.length}
                   </p>
-                  <h2 className="mt-2 text-2xl font-bold text-ink">{title}</h2>
+                  <h2 className="mt-1 font-heading text-xl font-bold sm:text-2xl">
+                    {title}
+                  </h2>
                 </div>
-                <span className="blueprint-label px-3 py-2">
+                <Badge
+                  variant={
+                    completed.includes(current) ? "default" : "secondary"
+                  }
+                >
                   {completed.includes(current) ? "Selesai" : "Aktif"}
-                </span>
+                </Badge>
               </div>
               {current === "understand" && (
                 <Understand
@@ -125,11 +147,11 @@ export function Workspace({
                     })
                   }
                 />
-              )}{" "}
+              )}
               {current === "design" && (
                 <Design
-                  value={progress.pseudocode[caseId] ?? ""}
                   caseId={caseId}
+                  value={progress.pseudocode[caseId] ?? ""}
                   flowchart={progress.flowchart[caseId]}
                   onChange={(value) =>
                     update({
@@ -144,7 +166,7 @@ export function Workspace({
                     })
                   }
                 />
-              )}{" "}
+              )}
               {current === "implement" && (
                 <Implement
                   code={progress.code[caseId] ?? defaultCode}
@@ -168,7 +190,7 @@ export function Workspace({
                     })
                   }
                 />
-              )}{" "}
+              )}
               {current === "test" && (
                 <Test
                   item={item}
@@ -181,15 +203,13 @@ export function Workspace({
                   }
                 />
               )}
-              <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-[#dfe8f1] pt-5">
-                <span className="font-mono text-[10px] uppercase tracking-widest text-muted">
-                  {message}
-                </span>
-                <div className="flex gap-3">
-                  <Button variant="secondary" onClick={() => go(current)}>
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+                <span className="text-sm text-muted-foreground">{message}</span>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => go(current)}>
                     {completed.includes(current)
-                      ? "Simpan Perubahan"
-                      : "Simpan Draf"}
+                      ? "Simpan perubahan"
+                      : "Simpan draf"}
                   </Button>
                   <Button
                     onClick={() => {
@@ -201,22 +221,22 @@ export function Workspace({
                   >
                     {nextStage
                       ? `Lanjut ke ${nextStage.short}`
-                      : "Selesaikan Kasus"}
+                      : "Selesaikan kasus"}
                   </Button>
                 </div>
               </div>
-            </Card>
-          </div>
-          <div className="space-y-5">
+            </CardContent>
+          </Card>
+          <div className="space-y-4">
             <Assistant stage={title} />
             <Card>
-              <p className="blueprint-label inline-block px-2 py-1">
-                Tujuan Misi
-              </p>
-              <p className="mt-3 text-sm leading-6 text-ink">{item.goal}</p>
-              <p className="mt-4 font-mono text-[10px] leading-5 text-muted">
-                Tahap ditandai selesai setelah artefaknya terisi.
-              </p>
+              <CardContent>
+                <Badge variant="secondary">Tujuan misi</Badge>
+                <p className="mt-3 text-sm leading-6">{item.goal}</p>
+                <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                  Tahap ditandai selesai setelah hasil kerjanya terisi.
+                </p>
+              </CardContent>
             </Card>
           </div>
         </div>
@@ -240,23 +260,24 @@ function Understand({
     ["constraints", "Batasan", "Kondisi apa yang perlu diperhatikan?"],
   ];
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {fields.map(([key, label, placeholder]) => (
-        <div key={key}>
-          <Label>{label}</Label>
-          <textarea
-            aria-label={label}
+        <div key={key} className="space-y-2">
+          <Label htmlFor={`spec-${key}`}>{label}</Label>
+          <Textarea
+            id={`spec-${key}`}
             value={spec[key]}
             onChange={(e) => onChange({ ...spec, [key]: e.target.value })}
             placeholder={placeholder}
             rows={2}
-            className="w-full resize-y rounded-xl border border-[#d8e4dd] bg-[#fbfdfb] p-3 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-mint"
           />
         </div>
       ))}
     </div>
   );
 }
+const codeAreaCls =
+  "font-mono text-sm leading-6 rounded-xl border-zinc-800 bg-zinc-950 p-4 text-zinc-100 placeholder:text-zinc-500 focus-visible:border-primary";
 function Design({
   caseId,
   value,
@@ -272,27 +293,28 @@ function Design({
 }) {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-[#f2f7f3] p-4 text-sm leading-6 text-muted">
+      <p className="rounded-xl bg-muted p-3 text-sm leading-6 text-muted-foreground">
         Susun algoritma dalam langkah-langkah singkat, lalu gambarkan sebagai
         flowchart.
-      </div>
+      </p>
       <FlowchartEditor
         key={caseId}
         value={flowchart}
         draft={getFlowchartDraft(caseId)}
         onChange={onFlowchartChange}
       />
-      <div>
-        <Label>Pseudocode</Label>
-        <textarea
-          aria-label="Pseudocode"
+      <div className="space-y-2">
+        <Label htmlFor="pseudocode">Pseudocode</Label>
+        <Textarea
+          id="pseudocode"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={
             "MULAI\nBaca input...\nHitung...\nTampilkan hasil\nSELESAI"
           }
-          rows={12}
-          className="w-full rounded-xl border border-[#d8e4dd] bg-[#17252e] p-4 font-mono text-sm leading-6 text-[#d8f5e5] outline-none focus:border-teal"
+          rows={10}
+          spellCheck={false}
+          className={codeAreaCls}
         />
       </div>
     </div>
@@ -310,25 +332,30 @@ function Implement({
   onRun: () => void;
 }) {
   return (
-    <div className="space-y-5">
-      <div>
-        <Label>Editor Python</Label>
-        <textarea
-          aria-label="Editor Python"
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="python-editor">Editor Python</Label>
+        <Textarea
+          id="python-editor"
           value={code}
           onChange={(e) => onChange(e.target.value)}
           rows={14}
-          className="w-full rounded-xl border border-[#d8e4dd] bg-[#17252e] p-4 font-mono text-sm leading-6 text-[#d8f5e5] outline-none focus:border-teal"
+          spellCheck={false}
+          className={codeAreaCls}
         />
       </div>
-      <Button onClick={onRun}>▶ Jalankan kode</Button>
+      <Button onClick={onRun}>
+        <Play /> Jalankan kode
+      </Button>
       {result && (
-        <div className="rounded-xl bg-[#111c22] p-4 font-mono text-sm text-[#c6f6d8]">
-          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-[#8cb99e]">
+        <div className="rounded-xl bg-zinc-950 p-4 text-sm text-emerald-200">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">
             Terminal
           </p>
-          <pre className="whitespace-pre-wrap">{result.stdout}</pre>
-          {result.error && <p className="mt-2 text-coral">{result.error}</p>}
+          <pre className="whitespace-pre-wrap font-mono">{result.stdout}</pre>
+          {result.error && (
+            <p className="mt-2 font-mono text-red-400">{result.error}</p>
+          )}
         </div>
       )}
     </div>
@@ -345,13 +372,12 @@ function Test({
 }) {
   return (
     <div>
-      <p className="mb-4 text-sm text-muted">
-        Periksa output aktual dan bandingkan dengan ekspektasi. Hasil di bawah
-        ditampilkan di bawah.
+      <p className="mb-4 text-sm text-muted-foreground">
+        Periksa output aktual dan bandingkan dengan ekspektasi.
       </p>
-      <div className="overflow-hidden rounded-xl border border-[#dce8e0]">
+      <div className="overflow-x-auto rounded-xl border">
         <table className="w-full text-left text-sm">
-          <thead className="bg-[#f2f7f3] text-xs uppercase text-muted">
+          <thead className="bg-muted text-xs uppercase text-muted-foreground">
             <tr>
               <th className="p-3">Input</th>
               <th className="p-3">Ekspektasi</th>
@@ -361,20 +387,22 @@ function Test({
           </thead>
           <tbody>
             {item.tests.map((test) => (
-              <tr key={test.id} className="border-t border-[#e6eee9]">
+              <tr key={test.id} className="border-t">
                 <td className="p-3">{test.input}</td>
-                <td className="p-3">{test.expected}</td>
-                <td className="p-3">{test.actual}</td>
-                <td className="p-3 font-bold text-teal">
-                  {test.passed ? "Lulus" : "Perlu revisi"}
+                <td className="p-3 font-mono">{test.expected}</td>
+                <td className="p-3 font-mono">{test.actual}</td>
+                <td className="p-3">
+                  <Badge variant={test.passed ? "default" : "destructive"}>
+                    {test.passed ? "Lulus" : "Perlu revisi"}
+                  </Badge>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <div className="mt-5">
-        <Button variant="secondary" onClick={onRetry}>
+      <div className="mt-4">
+        <Button variant="outline" onClick={onRetry}>
           {tested ? "Uji ulang" : "Jalankan semua tes"}
         </Button>
       </div>
