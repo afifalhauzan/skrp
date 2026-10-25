@@ -8,12 +8,17 @@ import { ProgressBar } from "./ProgressBar";
 import {
   blankSpec,
   defaultCode,
-  flowchartTemplate,
+  getFlowchartDraft,
   getCase,
   stages,
 } from "@/lib/mock-data";
 import { loadProgress, saveProgress } from "@/lib/persistence";
-import type { ProblemSpec, ProgressState, StageId } from "@/lib/types";
+import type {
+  Flowchart,
+  ProblemSpec,
+  ProgressState,
+  StageId,
+} from "@/lib/types";
 
 export function Workspace({
   caseId,
@@ -124,7 +129,8 @@ export function Workspace({
               {current === "design" && (
                 <Design
                   value={progress.pseudocode[caseId] ?? ""}
-                  flowchart={progress.flowchart[caseId] ?? ""}
+                  caseId={caseId}
+                  flowchart={progress.flowchart[caseId]}
                   onChange={(value) =>
                     update({
                       ...progress,
@@ -253,15 +259,17 @@ function Understand({
   );
 }
 function Design({
+  caseId,
   value,
   flowchart,
   onChange,
   onFlowchartChange,
 }: {
+  caseId: string;
   value: string;
-  flowchart: string;
+  flowchart?: Flowchart;
   onChange: (value: string) => void;
-  onFlowchartChange: (value: string) => void;
+  onFlowchartChange: (value: Flowchart) => void;
 }) {
   return (
     <div className="space-y-5">
@@ -270,8 +278,9 @@ function Design({
         flowchart.
       </div>
       <FlowchartEditor
+        key={caseId}
         value={flowchart}
-        template={flowchartTemplate}
+        draft={getFlowchartDraft(caseId)}
         onChange={onFlowchartChange}
       />
       <div>

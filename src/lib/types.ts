@@ -1,5 +1,27 @@
 export type SupportLevel = "HIGH" | "MODERATE" | "LOW";
 export type StageId = "understand" | "design" | "implement" | "test";
+export type FlowNodeKind = "start" | "end" | "process" | "io" | "decision";
+export interface FlowNode {
+  id: string;
+  kind: FlowNodeKind;
+  label: string;
+  x: number;
+  y: number;
+  /** "ai" = draft supplied by BE/AI; becomes "student" once the student edits the label. */
+  origin: "ai" | "student";
+}
+export interface FlowEdge {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string;
+  targetHandle?: string;
+  label?: string;
+}
+export interface Flowchart {
+  nodes: FlowNode[];
+  edges: FlowEdge[];
+}
 export interface ProblemSpec {
   goal: string;
   input: string;
@@ -38,7 +60,7 @@ export interface ProgressState {
   completedStages: Record<string, StageId[]>;
   problemSpecs: Record<string, ProblemSpec>;
   pseudocode: Record<string, string>;
-  flowchart: Record<string, string>;
+  flowchart: Record<string, Flowchart>;
   code: Record<string, string>;
   execution: Record<string, ExecutionResult | undefined>;
   tested: Record<string, boolean>;

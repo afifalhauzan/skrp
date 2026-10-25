@@ -1,5 +1,8 @@
 import type {
   CaseDefinition,
+  FlowEdge,
+  FlowNode,
+  Flowchart,
   ProblemSpec,
   ProgressState,
   StageId,
@@ -112,14 +115,67 @@ uang = 25000
 
 total = harga_1 + harga_2 + harga_3
 print(f"Total: {total}")`;
-export const flowchartTemplate = `flowchart TD
-  A([Mulai]) --> B[/Baca input/]
-  B --> C{Kondisi?}
-  C -- Ya --> D[Proses A]
-  C -- Tidak --> E[Proses B]
-  D --> F[/Tampilkan hasil/]
-  E --> F
-  F --> G([Selesai])`;
+const ai = (
+  id: string,
+  kind: FlowNode["kind"],
+  label: string,
+  x: number,
+  y: number,
+): FlowNode => ({ id, kind, label, x, y, origin: "ai" });
+const link = (
+  source: string,
+  target: string,
+  sourceHandle = "b",
+  targetHandle = "t",
+  label?: string,
+): FlowEdge => ({
+  id: `${source}-${target}`,
+  source,
+  target,
+  sourceHandle,
+  targetHandle,
+  label,
+});
+/** Mock scaffold drafts; later replaced by a BE/AI response of the same shape. */
+export const flowchartDrafts: Record<string, Flowchart> = {
+  "case-1": {
+    nodes: [
+      ai("s", "start", "Mulai", 200, 0),
+      ai("i", "io", "Baca jenis kendaraan & lama parkir", 200, 90),
+      ai("d", "decision", "Mobil?", 200, 190),
+      ai("m", "process", "Hitung tarif mobil", 0, 320),
+      ai("o", "process", "Hitung tarif motor", 400, 320),
+      ai("p", "io", "Tampilkan tarif", 200, 440),
+      ai("e", "end", "Selesai", 200, 530),
+    ],
+    edges: [
+      link("s", "i"),
+      link("i", "d"),
+      link("d", "m", "l", "t", "Ya"),
+      link("d", "o", "r", "t", "Tidak"),
+      link("m", "p", "b", "l"),
+      link("o", "p", "b", "r"),
+      link("p", "e"),
+    ],
+  },
+  "case-2": {
+    nodes: [
+      ai("s", "start", "Mulai", 200, 0),
+      ai("i", "io", "Baca jumlah hari terlambat", 200, 90),
+      ai("e", "end", "Selesai", 200, 420),
+    ],
+    edges: [link("s", "i")],
+  },
+  "case-3": {
+    nodes: [
+      ai("s", "start", "Mulai", 200, 0),
+      ai("e", "end", "Selesai", 200, 420),
+    ],
+    edges: [],
+  },
+};
+export const getFlowchartDraft = (caseId: string): Flowchart =>
+  flowchartDrafts[caseId] ?? { nodes: [], edges: [] };
 export const initialProgress = (): ProgressState => ({
   loggedIn: false,
   studentName: "",
