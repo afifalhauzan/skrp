@@ -51,7 +51,7 @@ export interface ExecutionResult {
   stdout: string;
   error?: string;
   traceback?: string;
-  simulated: true;
+  durationMs?: number;
 }
 export interface ProgressState {
   loggedIn: boolean;
@@ -62,6 +62,7 @@ export interface ProgressState {
   pseudocode: Record<string, string>;
   flowchart: Record<string, Flowchart>;
   code: Record<string, string>;
+  stdin: Record<string, string>;
   execution: Record<string, ExecutionResult | undefined>;
   tested: Record<string, boolean>;
   reflection: string;

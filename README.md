@@ -35,7 +35,8 @@ State prototype disimpan di `localStorage` dengan key `pyscaffold-progress-v1`. 
 
 ## Mock dan keterbatasan
 
-- Eksekusi Python dan test runner sengaja berupa hasil simulasi yang diberi label jelas; tidak ada Python sandbox atau AI API.
+- Editor Python memakai CodeMirror (syntax highlighting). Kode dijalankan di browser lewat Pyodide dalam Web Worker (`public/pyodide-worker.js`, `src/lib/python-runner.ts`); runtime Pyodide di-self-host di `public/pyodide` (disalin dari `node_modules` oleh `scripts/copy-pyodide.mjs` saat install/dev/build, tidak di-commit). `input()` dibaca dari kotak "Input program" (satu baris per `input()`), dan program dihentikan setelah 10 detik. Kode awal dan draf dari BE/AI cukup mengisi `progress.code[caseId]` (draf bawaan: `codeDrafts` di `data.ts`).
+- Tabel hasil uji di tahap 4 masih data tetap, belum menjalankan kode siswa; tidak ada AI API.
 - Routing kasus menggunakan fixture tetap (Kasus 1 → 2 → 3), karena PRD belum menetapkan rubric numerik atau ambang routing.
 - Pseudocode adalah editor teks; flowchart memakai editor drag-and-drop React Flow; datanya JSON `{nodes, edges}` di `progress.flowchart[caseId]`, draf dari BE/AI cukup mengisi struktur yang sama (lihat `flowchartDrafts` di `data.ts`); riwayat revisi penuh menjadi pekerjaan lanjutan.
 - Figma MCP tersedia di `.vscode/mcp.json`; frame desktop terpilih digunakan sebagai referensi komposisi, sementara node berisi beberapa frame aplikasi.

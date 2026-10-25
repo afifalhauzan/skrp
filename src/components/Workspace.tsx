@@ -1,8 +1,8 @@
 "use client";
 import { containerCls } from "@/lib/ui";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Play } from "lucide-react";
+import { Loader2, Play } from "lucide-react";
 import { Assistant } from "./Assistant";
 import { LinkButton, Shell } from "./Shell";
 import { Badge } from "@/components/ui/badge";
@@ -11,18 +11,22 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { CodeEditor } from "./CodeEditor";
 import { FlowchartEditor } from "./FlowchartEditor";
 import { ProgressBar } from "./ProgressBar";
 import {
   blankSpec,
-  defaultCode,
+  getCodeDraft,
+  getStdinDraft,
   getFlowchartDraft,
   initialProgress,
   getCase,
   stages,
 } from "@/lib/data";
 import { loadProgress, saveProgress } from "@/lib/persistence";
+import { runPython, warmupPython } from "@/lib/python-runner";
 import type {
+  ExecutionResult,
   Flowchart,
   ProblemSpec,
   ProgressState,
@@ -47,6 +51,8 @@ export function Workspace({
     setProgress(loadProgress());
     setReady(true);
   }, []);
+  const latest = useRef(progress);
+  latest.current = progress;
   const [message, setMessage] = useState("");
   const completed = progress.completedStages[caseId] ?? [];
   const spec = progress.problemSpecs[caseId] ?? blankSpec;
@@ -86,7 +92,9 @@ export function Workspace({
       : current === "design"
         ? Boolean(progress.pseudocode[caseId]?.trim())
         : current === "implement"
-          ? Boolean(progress.execution[caseId])
+          ? Boolean(
+              progress.execution[caseId] && !progress.execution[caseId]?.error,
+            )
           : Boolean(progress.tested[caseId]);
   const nextStage = stages[stages.findIndex((s) => s.id === current) + 1];
   const title = stages.find((s) => s.id === current)?.label ?? "";
@@ -169,7 +177,9 @@ export function Workspace({
               )}
               {current === "implement" && (
                 <Implement
-                  code={progress.code[caseId] ?? defaultCode}
+                  code={progress.code[caseId] ?? getCodeDraft(caseId)}
+                  draft={getCodeDraft(caseId)}
+                  stdin={progress.stdin[caseId] ?? getStdinDraft(caseId)}
                   result={progress.execution[caseId]}
                   onChange={(value) =>
                     update({
@@ -177,18 +187,22 @@ export function Workspace({
                       code: { ...progress.code, [caseId]: value },
                     })
                   }
-                  onRun={() =>
+                  onStdinChange={(value) =>
                     update({
                       ...progress,
-                      execution: {
-                        ...progress.execution,
-                        [caseId]: {
-                          stdout: "Tarif: 10000\nProgram selesai tanpa error.",
-                          simulated: true,
-                        },
-                      },
+                      stdin: { ...progress.stdin, [caseId]: value },
                     })
                   }
+                  onRun={async (code, stdin) => {
+                    const result = await runPython(code, stdin);
+                    update({
+                      ...latest.current,
+                      execution: {
+                        ...latest.current.execution,
+                        [caseId]: result,
+                      },
+                    });
+                  }}
                 />
               )}
               {current === "test" && (
@@ -322,39 +336,101 @@ function Design({
 }
 function Implement({
   code,
+  draft,
+  stdin,
   result,
   onChange,
+  onStdinChange,
   onRun,
 }: {
   code: string;
-  result?: { stdout: string; error?: string };
+  draft: string;
+  stdin: string;
+  result?: ExecutionResult;
   onChange: (value: string) => void;
-  onRun: () => void;
+  onStdinChange: (value: string) => void;
+  onRun: (code: string, stdin: string) => Promise<void>;
 }) {
+  const [running, setRunning] = useState(false);
+  useEffect(() => warmupPython(), []);
+  const run = async () => {
+    setRunning(true);
+    try {
+      await onRun(code, stdin);
+    } finally {
+      setRunning(false);
+    }
+  };
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="python-editor">Editor Python</Label>
-        <Textarea
-          id="python-editor"
+        <div className="flex items-center justify-between gap-2">
+          <Label>Editor Python</Label>
+          {code !== draft && (
+            <Button
+              variant="link"
+              size="sm"
+              onClick={() => {
+                if (
+                  confirm(
+                    "Kembalikan kode ke draf awal? Perubahanmu akan hilang.",
+                  )
+                )
+                  onChange(draft);
+              }}
+            >
+              Reset ke draf
+            </Button>
+          )}
+        </div>
+        <CodeEditor
           value={code}
-          onChange={(e) => onChange(e.target.value)}
-          rows={14}
-          spellCheck={false}
-          className={codeAreaCls}
+          onChange={onChange}
+          ariaLabel="Editor Python"
         />
       </div>
-      <Button onClick={onRun}>
-        <Play /> Jalankan kode
+      <div className="space-y-2">
+        <Label htmlFor="stdin">Input program</Label>
+        <Textarea
+          id="stdin"
+          value={stdin}
+          onChange={(e) => onStdinChange(e.target.value)}
+          rows={2}
+          spellCheck={false}
+          placeholder="Satu baris untuk setiap input() di kode"
+          className="font-mono text-sm"
+        />
+        <p className="text-xs text-muted-foreground">
+          Baris pertama dipakai untuk input() pertama, baris kedua untuk input()
+          kedua, dan seterusnya.
+        </p>
+      </div>
+      <Button onClick={run} disabled={running}>
+        {running ? <Loader2 className="animate-spin" /> : <Play />}
+        {running ? "Menjalankan..." : "Jalankan kode"}
       </Button>
       {result && (
-        <div className="rounded-xl bg-zinc-950 p-4 text-sm text-emerald-200">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-            Terminal
+        <div className="rounded-xl bg-zinc-950 p-4 text-sm">
+          <p className="mb-2 flex justify-between text-xs font-semibold uppercase tracking-wide text-zinc-400">
+            <span>Terminal</span>
+            {result.durationMs !== undefined && (
+              <span className="font-normal normal-case">
+                {result.durationMs} ms
+              </span>
+            )}
           </p>
-          <pre className="whitespace-pre-wrap font-mono">{result.stdout}</pre>
+          {result.stdout && (
+            <pre className="whitespace-pre-wrap font-mono text-emerald-200">
+              {result.stdout}
+            </pre>
+          )}
           {result.error && (
-            <p className="mt-2 font-mono text-red-400">{result.error}</p>
+            <pre className="mt-2 whitespace-pre-wrap font-mono text-red-400">
+              {result.error}
+            </pre>
+          )}
+          {!result.stdout && !result.error && (
+            <p className="text-zinc-400">(program tidak mencetak apa pun)</p>
           )}
         </div>
       )}

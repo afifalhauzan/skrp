@@ -107,14 +107,41 @@ export const blankSpec: ProblemSpec = {
   output: "",
   constraints: "",
 };
-export const defaultCode = `# Tulis solusi kamu di sini
-harga_1 = 5000
-harga_2 = 7000
-harga_3 = 8000
-uang = 25000
+/** Kode awal per kasus; dapat digantikan draf/bantuan dari BE/AI lewat progress.code[caseId]. */
+export const codeDrafts: Record<string, string> = {
+  "case-1": `# Kasus 1: tarif parkir progresif
+jenis = input("Jenis kendaraan (mobil/motor): ")
+jam = int(input("Lama parkir (jam): "))
 
-total = harga_1 + harga_2 + harga_3
-print(f"Total: {total}")`;
+# TODO: isi tarif per jam sesuai jenis kendaraan
+if jenis == "mobil":
+    tarif_per_jam = 0
+else:
+    tarif_per_jam = 0
+
+total = tarif_per_jam * jam
+print(f"Tarif: {total}")
+`,
+  "case-2": `# Kasus 2: denda keterlambatan buku
+hari = int(input("Jumlah hari terlambat: "))
+
+# TODO: hitung denda dengan percabangan
+denda = 0
+
+print(f"Denda: {denda}")
+`,
+  "case-3": `# Kasus 3: rata-rata tinggi tanaman
+# Tulis solusi kamu di sini
+`,
+};
+/** Contoh isi input() per kasus (satu baris per input()). */
+export const stdinDrafts: Record<string, string> = {
+  "case-1": "mobil\n2",
+  "case-2": "3",
+  "case-3": "10, 12, 14",
+};
+export const getCodeDraft = (caseId: string) => codeDrafts[caseId] ?? "";
+export const getStdinDraft = (caseId: string) => stdinDrafts[caseId] ?? "";
 const ai = (
   id: string,
   kind: FlowNode["kind"],
@@ -185,6 +212,7 @@ export const initialProgress = (): ProgressState => ({
   pseudocode: {},
   flowchart: {},
   code: {},
+  stdin: {},
   execution: {},
   tested: {},
   reflection: "",
