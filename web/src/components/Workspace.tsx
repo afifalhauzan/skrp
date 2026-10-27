@@ -100,8 +100,7 @@ function WorkspaceInner({
         : draft.revision
           ? `Tersimpan · revisi ${draft.revision}${learning.mode === "mock" ? " (mock lokal)" : ""}`
           : undefined;
-  const failed =
-    learning.saveState === "error" || message.startsWith("Gagal");
+  const failed = learning.saveState === "error" || message.startsWith("Gagal");
 
   return (
     <Shell>
@@ -199,11 +198,7 @@ function WorkspaceInner({
                   )}
                 </span>
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={saveDraft}
-                    disabled={busy}
-                  >
+                  <Button variant="outline" onClick={saveDraft} disabled={busy}>
                     {completed.includes(current)
                       ? "Simpan perubahan"
                       : "Simpan draf"}

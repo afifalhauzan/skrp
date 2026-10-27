@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { GraduationCap } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { useLearning } from "@/features/learning/LearningProvider";
 import { containerCls } from "@/lib/ui";
@@ -18,9 +18,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             href="/"
             className="flex items-center gap-2 font-heading text-base font-semibold"
           >
-            <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-              <GraduationCap className="size-4" />
-            </span>
+            <Logo className="size-8" />
             PyScaffold
           </Link>
           <nav className="flex items-center gap-1 text-sm">
@@ -70,11 +68,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
             "flex flex-col gap-2 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between",
           )}
         >
-          <p>
-            <span className="font-heading font-semibold text-foreground">
-              PyScaffold
-            </span>{" "}
-            · Media pembelajaran algoritma dan Python untuk SMA kelas XII
+          <p className="flex items-center gap-2">
+            <Logo className="size-6" />
+            <span>
+              <span className="font-heading font-semibold text-foreground">
+                PyScaffold
+              </span>{" "}
+              · Media pembelajaran algoritma dan Python untuk SMA kelas XII
+            </span>
           </p>
           <nav className="flex gap-4">
             <Link href="/mission" className="hover:text-foreground">
