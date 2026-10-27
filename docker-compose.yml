@@ -1,0 +1,100 @@
+# PyScaffold: PostgreSQL + Express API (+ optional Next.js web) for a VPS.
+#
+#   cp .env.example .env        # then fill in the secrets
+#   docker compose build
+#   docker compose up -d db
+#   docker compose run --rm migrate      # explicit migration step
+#   docker compose up -d api
+#
+# The web app normally runs on Vercel. To run it here too: `docker compose --profile web up -d`.
+
+name: skrp
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-skrp}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [internal]
+    # No `ports:` on purpose: PostgreSQL is reachable only from services on `internal`.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    image: skrp-api:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "4000"
+      # Inside Docker the database host is the service name `db`, never localhost.
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-skrp}?schema=public
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?set INTERNAL_API_KEY in .env}
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      TRUST_PROXY: ${TRUST_PROXY:-1}
+    # Bound to loopback by default: put a TLS reverse proxy (Caddy/nginx) in front and
+    # proxy your API domain to 127.0.0.1:${API_PORT}.
+    ports:
+      - "${API_BIND:-127.0.0.1}:${API_PORT:-4000}:4000"
+    networks: [internal, edge]
+
+  # One-shot, run on demand: applies pending migrations with `prisma migrate deploy`.
+  # It never resets or drops data.
+  migrate:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    image: skrp-api:latest
+    profiles: [tools]
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-skrp}?schema=public
+    command: ["node_modules/.bin/prisma", "migrate", "deploy", "--schema", "prisma/schema.prisma"]
+    networks: [internal]
+
+  # Optional: run the Next.js frontend on the same host instead of Vercel.
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_MODE: live
+    image: skrp-web:latest
+    profiles: [web]
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      API_INTERNAL_URL: http://api:4000
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?set INTERNAL_API_KEY in .env}
+    ports:
+      - "${WEB_BIND:-127.0.0.1}:${WEB_PORT:-3000}:3000"
+    networks: [internal, edge]
+
+networks:
+  # `internal: true` blocks external traffic; the database lives only here.
+  internal:
+    internal: true
+  edge: {}
+
+volumes:
+  pgdata:

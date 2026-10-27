@@ -1,0 +1,10 @@
+packages:
+  - web
+  - api
+  - packages/*
+
+onlyBuiltDependencies:
+  - "@prisma/client"
+  - "@prisma/engines"
+  - prisma
+  - esbuild

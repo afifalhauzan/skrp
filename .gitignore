@@ -1,4 +1,20 @@
-.next
-.vscode
+# dependencies
 node_modules
+
+# builds
+.next
+dist
+out
+*.tsbuildinfo
+next-env.d.ts
+
+# env files (examples are committed)
+.env
+.env.*
+!.env.example
+
+# tooling
+.vscode
 .vercel
+*.log
+.DS_Store
