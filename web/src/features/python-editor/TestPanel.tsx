@@ -4,6 +4,7 @@ import { CheckCircle2, Loader2, Play, XCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import type { ClientTestResult } from "@skrp/shared";
 import type { TestCase } from "@/lib/types";
 import { judge, type TestOutcome, type TestStatus } from "./judge";
 import { createPythonRunner } from "./runnerClient";
@@ -25,7 +26,11 @@ interface Props {
   /** The student's current code, as written in the implementation stage. */
   source: string;
   /** Called after each full run: true when every test passed for this exact source. */
-  onComplete: (allPassed: boolean, source: string) => void;
+  onComplete: (
+    allPassed: boolean,
+    source: string,
+    results: ClientTestResult[],
+  ) => void;
   /** Takes the student back to the editor to fix the code. */
   onEditCode: () => void;
 }
@@ -61,6 +66,14 @@ export function TestPanel({ tests, source, onComplete, onEditCode }: Props) {
     onComplete(
       tests.every((t) => next[t.id]?.status === "pass"),
       snapshot,
+      // Browser-reported outcomes: sent to the backend as unverified evidence.
+      tests
+        .filter((t) => next[t.id])
+        .map((t) => ({
+          testId: t.id,
+          passed: next[t.id]!.status === "pass",
+          actual: next[t.id]!.actual?.slice(0, 500),
+        })),
     );
   };
 

@@ -54,7 +54,7 @@ const NAMES: [number, string][] = [
  */
 export const SPECIAL_ACCOUNTS: { studentCode: string; name: string }[] = [
   { studentCode: "VALIDATOR001", name: "Bu Maurish" },
-  { studentCode: "VALIDATOR002", name: "Validator 2" },
+  { studentCode: "VALIDATOR002", name: "Bu Uun" },
 ];
 
 export const ROSTER: RosterEntry[] = NAMES.map(([attendanceNumber, name]) => ({

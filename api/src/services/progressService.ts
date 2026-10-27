@@ -8,7 +8,10 @@ import type {
 } from "@skrp/shared";
 import type { Prisma } from "@prisma/client";
 import { Prisma as PrismaNs } from "../lib/prisma";
-import { badRequest, conflict } from "../lib/errors";
+import { badRequest, conflict, invalidState } from "../lib/errors";
+import { toRouting } from "../lib/aiMappers";
+import type { AiRepository } from "../repositories/aiRepository";
+import type { EvaluationService } from "./evaluationService";
 import {
   toArtifact,
   toCaseProgress,
@@ -27,20 +30,27 @@ export class ProgressService {
   constructor(
     private readonly students: StudentService,
     private readonly progress: ProgressRepository,
+    private readonly evaluations: EvaluationService,
+    private readonly ai: AiRepository,
   ) {}
 
   async getSnapshot(studentCode: string): Promise<ProgressSnapshot> {
     const student = await this.students.getActiveStudent(studentCode);
-    const [cases, artifacts, latestCode] = await Promise.all([
-      this.progress.listCaseProgress(student.id),
-      this.progress.listArtifacts(student.id),
-      this.progress.latestCodePerCase(student.id),
-    ]);
+    const [cases, artifacts, latestCode, stageEvaluations, decisions] =
+      await Promise.all([
+        this.progress.listCaseProgress(student.id),
+        this.progress.listArtifacts(student.id),
+        this.progress.latestCodePerCase(student.id),
+        this.evaluations.latestForSnapshot(student.id),
+        this.ai.latestDecisions(student.id),
+      ]);
     return {
       student: toProfile(student),
       cases: cases.map(toCaseProgress),
       artifacts: artifacts.map(toArtifact),
       latestCode: latestCode.map(toCodeRevision),
+      stageEvaluations,
+      routing: decisions.map(toRouting),
     };
   }
 
@@ -59,6 +69,22 @@ export class ProgressService {
     );
     const allDone = completedStages.length === ALL_STAGES.length;
     const now = new Date();
+
+    // The client may only ASK for stages to be completed; the backend decides. Newly added
+    // stages must follow the previous ones and be backed by an evaluation of the current work.
+    const previouslyDone = existing?.completedStages ?? [];
+    const newlyDone = completedStages.filter(
+      (s) => !previouslyDone.includes(s),
+    );
+    for (const stage of newlyDone) {
+      const earlier = ALL_STAGES.slice(0, ALL_STAGES.indexOf(stage));
+      if (!earlier.every((e) => completedStages.includes(e))) {
+        throw invalidState(
+          `Selesaikan tahap ${earlier.find((e) => !completedStages.includes(e))} lebih dulu.`,
+        );
+      }
+    }
+    await this.evaluations.assertCompletable(student, caseId, newlyDone);
 
     const saved = await this.progress.upsertCaseProgress(student.id, caseId, {
       status: allDone ? "COMPLETED" : "IN_PROGRESS",

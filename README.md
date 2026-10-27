@@ -102,6 +102,14 @@ curl -X POST https://py.telaahkarier.com/api/students/import \
 `GET /students/:code`, `GET /students/:code/progress`, `PUT /students/:code/cases/:caseId/progress`, `PUT .../artifacts/:kind`, `POST .../code-revisions`. Admin (also `x-admin-key`): `GET|POST /students`, `POST /students/import`, `PATCH /students/:code`.
 Responses are `{ data }` or `{ error: { code, message, details?, requestId } }`.
 
+## AI evaluation and scaffolding
+
+Students press **Periksa jawaban** to have a stage evaluated by Gemini (via LangChain.js), can ask for hints at a
+backend-controlled level (L1–L5), and are routed between the three cases (HIGH → MODERATE → LOW) by an explicit
+policy. Set `GEMINI_API_KEY` (server-side) and apply the new migration. The scoring thresholds, hint escalation
+and routing rules are **provisional and unvalidated**. Full guide, API, SQL to inspect records and troubleshooting:
+[`docs/ai-evaluation-and-scaffolding.md`](docs/ai-evaluation-and-scaffolding.md).
+
 ## Python editor
 
 CodeMirror 6 editor, an `Input (stdin)` panel (one line per `input()` call), Run/Stop, and stdout/stderr/traceback output. Pyodide runs in a Web Worker; a run over 10 s is terminated. Each result stores the exact source and stdin that produced it and is marked stale when either changes. Code is autosaved (debounced) as append-only revisions; run metadata is attached only to the matching revision. Engine: `web/src/features/python-editor/`.

@@ -38,6 +38,7 @@ async function request<T>(
       response.status,
       error?.code ?? "INTERNAL_ERROR",
       error?.message ?? `Permintaan gagal (${response.status}).`,
+      error?.meta,
     );
   }
   if (!payload || typeof payload !== "object" || !("data" in payload)) {
@@ -53,6 +54,7 @@ async function request<T>(
 /** Talks to the same-origin Next.js BFF (`/api/*`). It never sees the Express origin. */
 export const liveClient: ApiClient = {
   mode: "live",
+  aiEnabled: true,
   getStudent: (code) => request("GET", `/students/${enc(code)}`),
   getProgress: (code) => request("GET", `/students/${enc(code)}/progress`),
   saveCaseProgress: (code, caseId, input) =>
@@ -73,4 +75,20 @@ export const liveClient: ApiClient = {
       `/students/${enc(code)}/cases/${enc(caseId)}/code-revisions`,
       input,
     ),
+  evaluateStage: (code, input) =>
+    request("POST", `/students/${enc(code)}/evaluations/stages`, input),
+  getStageEvaluations: (code, caseId, stage) =>
+    request(
+      "GET",
+      `/students/${enc(code)}/evaluations/stages?caseId=${enc(caseId)}&stage=${enc(stage)}`,
+    ),
+  requestHint: (code, input) =>
+    request("POST", `/students/${enc(code)}/assistance/hint`, input),
+  getAssistanceHistory: (code, caseId, stage) =>
+    request(
+      "GET",
+      `/students/${enc(code)}/assistance/history?caseId=${enc(caseId)}&stage=${enc(stage)}`,
+    ),
+  evaluateCase: (code, caseId) =>
+    request("POST", `/students/${enc(code)}/evaluations/cases`, { caseId }),
 };

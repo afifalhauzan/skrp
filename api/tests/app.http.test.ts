@@ -121,6 +121,22 @@ describe("access control", () => {
     ).toBe(401);
   });
 
+  it("treats empty optional variables (as passed by Docker Compose) as unset", () => {
+    const config = loadConfig({
+      NODE_ENV: "test",
+      DATABASE_URL: "postgresql://u:p@localhost:5432/db",
+      ADMIN_API_KEY: "",
+      GEMINI_API_KEY: "",
+      GEMINI_MODEL: "",
+      CORS_ORIGINS: "",
+      ROUTING_SKIP_MIN_RATIO: "",
+    });
+    expect(config.adminApiKey).toBeUndefined();
+    expect(config.ai.apiKey).toBeUndefined();
+    expect(config.ai.model).toBe("gemini-2.5-flash");
+    expect(config.routingSkipMinRatio).toBeUndefined();
+  });
+
   it("requires INTERNAL_API_KEY in production config", () => {
     expect(() =>
       loadConfig({

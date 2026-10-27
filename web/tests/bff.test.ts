@@ -131,4 +131,71 @@ describe("BFF forward()", () => {
     expect(init.body).toBe('{"a":1}');
     expect(init.headers["content-type"]).toBe("application/json");
   });
+
+  it("passes our own AI error codes through on 5xx, with only safe fields", async () => {
+    const evaluationId = "2f1b6c7e-9a40-4a6e-8d2b-0c5d7a1e3f90";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          {
+            error: {
+              code: "AI_TIMEOUT",
+              message: "Layanan AI terlalu lama merespons.",
+              meta: { evaluationId, secret: "AIzaSyLEAK" },
+              stack: "at /srv/app/x.ts",
+            },
+          },
+          504,
+        ),
+      ),
+    );
+    const res = await call();
+    expect(res.status).toBe(504);
+    const body = await res.json();
+    expect(body.error).toMatchObject({
+      code: "AI_TIMEOUT",
+      meta: { evaluationId },
+    });
+    expect(JSON.stringify(body)).not.toMatch(/AIza|\/srv\/app/);
+  });
+
+  it("does not pass through arbitrary 5xx error codes or malformed evaluation ids", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          {
+            error: {
+              code: "DB_PASSWORD_WRONG",
+              message: "password=hunter2",
+              meta: { evaluationId: "not-a-uuid" },
+            },
+          },
+          500,
+        ),
+      ),
+    );
+    const body = await (await call()).json();
+    expect(JSON.stringify(body)).not.toMatch(/hunter2|DB_PASSWORD/);
+    expect(body.error.meta).toBeUndefined();
+  });
+
+  it("uses the longer AI timeout and appends only the validated query", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ data: {} }));
+    vi.stubGlobal("fetch", fetchMock);
+    const spy = vi.spyOn(AbortSignal, "timeout");
+    const request = new Request("http://localhost/api/x");
+    await forward({
+      method: "GET",
+      path: "/api/students/PY001/assistance/history",
+      query: { caseId: "case-1", stage: "design" },
+      request,
+      timeoutMs: 65_000,
+    });
+    expect(fetchMock.mock.calls[0]![0]).toBe(
+      "http://api.internal:4000/api/students/PY001/assistance/history?caseId=case-1&stage=design",
+    );
+    expect(spy).toHaveBeenCalledWith(65_000);
+  });
 });

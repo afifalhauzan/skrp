@@ -57,6 +57,8 @@ export function resetMockData() {
 
 export const mockClient: ApiClient = {
   mode: "mock",
+  // Mock mode never fabricates AI results: these calls fail explicitly.
+  aiEnabled: false,
 
   async getStudent(code) {
     return requireStudent(code);
@@ -70,6 +72,8 @@ export const mockClient: ApiClient = {
       cases: Object.values(b.cases),
       artifacts: Object.values(b.artifacts),
       latestCode: Object.values(b.code).flatMap((list) => list.slice(-1)),
+      stageEvaluations: [],
+      routing: [],
     };
   },
 
@@ -146,4 +150,27 @@ export const mockClient: ApiClient = {
     write(db);
     return { revision, created: true };
   },
+  async evaluateStage() {
+    throw notAvailable();
+  },
+  async getStageEvaluations() {
+    throw notAvailable();
+  },
+  async requestHint() {
+    throw notAvailable();
+  },
+  async getAssistanceHistory() {
+    throw notAvailable();
+  },
+  async evaluateCase() {
+    throw notAvailable();
+  },
 };
+
+function notAvailable() {
+  return new ApiClientError(
+    501,
+    "AI_NOT_AVAILABLE_IN_MOCK",
+    "Evaluasi dan petunjuk AI tidak tersedia pada mode mock.",
+  );
+}

@@ -5,6 +5,17 @@ import helmet from "helmet";
 import pinoHttp from "pino-http";
 import type { PrismaClient } from "@prisma/client";
 import type { AppConfig } from "./config/env";
+import { AiController } from "./controllers/aiController";
+import { CASE_ORDER } from "./config/cases";
+import { createGeminiRunner, type ModelRunner } from "./integrations/langchain";
+import { AiRepository } from "./repositories/aiRepository";
+import { AssistanceService } from "./services/assistanceService";
+import { CaseEvaluationService } from "./services/caseEvaluationService";
+import type { EvaluationLimits } from "./services/evaluationService";
+import type { AssistanceLimits } from "./services/assistanceService";
+import { EvaluationService } from "./services/evaluationService";
+import { createAssistancePolicy } from "./policies/assistance";
+import { createRoutingPolicy } from "./policies/routing";
 import { ProgressController } from "./controllers/progressController";
 import { StudentController } from "./controllers/studentController";
 import type { Logger } from "./lib/logger";
@@ -20,12 +31,26 @@ export interface AppDeps {
   config: AppConfig;
   logger: Logger;
   prisma: PrismaClient;
+  /** Inject a fake in tests; defaults to the LangChain/Gemini runner. */
+  runner?: ModelRunner;
+  requireEvaluationForProgress?: boolean;
+  /** Override anti-abuse limits (tests). */
+  evaluationLimits?: EvaluationLimits;
+  assistanceLimits?: AssistanceLimits;
 }
 
 const SAFE_REQUEST_ID = /^[A-Za-z0-9._-]{8,64}$/;
 
 /** Builds the Express app. Startup (listen, signals, DB connect) lives in server.ts. */
-export function createApp({ config, logger, prisma }: AppDeps) {
+export function createApp({
+  config,
+  logger,
+  prisma,
+  runner,
+  requireEvaluationForProgress,
+  evaluationLimits,
+  assistanceLimits,
+}: AppDeps) {
   const app = express();
   app.disable("x-powered-by");
   app.set("trust proxy", config.trustProxy);
@@ -78,9 +103,45 @@ export function createApp({ config, logger, prisma }: AppDeps) {
   const studentRepository = new StudentRepository(prisma);
   const progressRepository = new ProgressRepository(prisma);
   const studentService = new StudentService(studentRepository);
+  const aiRepository = new AiRepository(prisma);
+  const modelRunner = runner ?? createGeminiRunner(config.ai);
+  const evaluationService = new EvaluationService({
+    ai: aiRepository,
+    progress: progressRepository,
+    students: studentService,
+    runner: modelRunner,
+    logger,
+    limits: evaluationLimits,
+    completion: { minScore: config.stageMinScore },
+    requireEvaluationForProgress:
+      requireEvaluationForProgress ?? config.requireEvaluationForProgress,
+  });
+  const assistanceService = new AssistanceService({
+    ai: aiRepository,
+    progress: progressRepository,
+    students: studentService,
+    runner: modelRunner,
+    policy: createAssistancePolicy(),
+    limits: assistanceLimits,
+    logger,
+  });
+  const caseEvaluationService = new CaseEvaluationService({
+    ai: aiRepository,
+    students: studentService,
+    routing: createRoutingPolicy({
+      caseOrder: CASE_ORDER,
+      skip: {
+        enabled: config.routingSkipMinRatio !== undefined,
+        fromCaseId: "case-1",
+        minScoreRatio: config.routingSkipMinRatio ?? null,
+      },
+    }),
+  });
   const progressService = new ProgressService(
     studentService,
     progressRepository,
+    evaluationService,
+    aiRepository,
   );
   app.use(
     "/api",
@@ -88,6 +149,11 @@ export function createApp({ config, logger, prisma }: AppDeps) {
       config,
       new StudentController(studentService),
       new ProgressController(progressService),
+      new AiController(
+        evaluationService,
+        assistanceService,
+        caseEvaluationService,
+      ),
     ),
   );
 
