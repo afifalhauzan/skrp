@@ -80,6 +80,13 @@ function WorkspaceInner({
     setEvalError(null);
   }, [caseId, stageId]);
 
+  // An evaluation held in memory can predate a rule change on the server; re-read it when
+  // the stage opens so "Boleh lanjut" always reflects the backend's current policy.
+  const { aiEnabled, refreshEvaluation } = learning;
+  useEffect(() => {
+    if (aiEnabled) void refreshEvaluation(caseId, current).catch(() => {});
+  }, [aiEnabled, refreshEvaluation, caseId, current]);
+
   const go = (id: StageId) => router.push(`/learn/${caseId}/${id}`);
   const nextStage = stages[stages.findIndex((s) => s.id === current) + 1];
   const title = stages.find((s) => s.id === current)?.label ?? "";
@@ -139,6 +146,10 @@ function WorkspaceInner({
       setMessage(
         error instanceof Error ? error.message : "Gagal menyimpan. Coba lagi.",
       );
+      // The server refused to complete the stage: our copy of the evaluation is out of date.
+      if (error instanceof ApiClientError && error.code === "INVALID_STATE") {
+        void learning.refreshEvaluation(caseId, current).catch(() => {});
+      }
     } finally {
       setBusy(false);
     }

@@ -153,6 +153,9 @@ export const mockClient: ApiClient = {
   async evaluateStage() {
     throw notAvailable();
   },
+  async getStageEvaluations() {
+    throw notAvailable();
+  },
   async requestHint() {
     throw notAvailable();
   },

@@ -29,6 +29,7 @@ export interface CompletionDecision {
   policyVersion: string;
   satisfied: boolean;
   reason: string;
+  minScore: number;
 }
 
 export function evaluateStageCompletion(
@@ -39,6 +40,7 @@ export function evaluateStageCompletion(
     policyVersion: COMPLETION_POLICY_VERSION,
     satisfied,
     reason,
+    minScore: config.minScore,
   });
   if (e.status !== "COMPLETED")
     return result(false, "Evaluasi belum berhasil diselesaikan.");

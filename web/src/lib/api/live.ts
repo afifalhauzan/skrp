@@ -77,6 +77,11 @@ export const liveClient: ApiClient = {
     ),
   evaluateStage: (code, input) =>
     request("POST", `/students/${enc(code)}/evaluations/stages`, input),
+  getStageEvaluations: (code, caseId, stage) =>
+    request(
+      "GET",
+      `/students/${enc(code)}/evaluations/stages?caseId=${enc(caseId)}&stage=${enc(stage)}`,
+    ),
   requestHint: (code, input) =>
     request("POST", `/students/${enc(code)}/assistance/hint`, input),
   getAssistanceHistory: (code, caseId, stage) =>

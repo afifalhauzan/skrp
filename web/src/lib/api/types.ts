@@ -52,6 +52,12 @@ export interface ApiClient {
     studentCode: string,
     input: SubmitStageEvaluationInput,
   ): Promise<{ evaluation: StageEvaluation; created: boolean }>;
+  /** Latest-first evaluation history of one stage. */
+  getStageEvaluations(
+    studentCode: string,
+    caseId: string,
+    stage: StageId,
+  ): Promise<StageEvaluation[]>;
   requestHint(
     studentCode: string,
     input: HintRequestInput,

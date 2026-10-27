@@ -64,13 +64,53 @@ check("Lanjut is locked before evaluation", await next("02").isDisabled());
 // a low score (4 x 4 = 16 < 20) gives feedback but does not let the student continue
 await setMode({ score: 4 });
 await btn("Periksa jawaban").click();
-await page.getByText("Belum memenuhi syarat lanjut").waitFor();
+await page.getByText("Belum lolos").first().waitFor();
 const low = await page.getByTestId("evaluation-result").innerText();
 check(
   "score below 20/40 shows feedback and the minimum, and blocks Lanjut",
-  low.includes("16/40") && /20\/40/.test(low) && (await next("02").isDisabled()),
+  low.includes("16/40") &&
+    low.includes("Batas minimal untuk lanjut: 20/40") &&
+    (await page.getByTestId("completion-blocked").isVisible()) &&
+    (await next("02").isDisabled()),
   low.replace(/\s+/g, " ").slice(0, 80),
 );
+
+// Stale-client scenario: an OLD server (no minimum) had told the browser "Boleh lanjut" for a
+// 16/40 result. The current server must still refuse, and the UI must correct itself.
+await page.fill('textarea[aria-label="Batasan"]', "isi Batasan versi 2");
+const tamper = async (route) => {
+  if (route.request().method() !== "POST") return route.continue();
+  const res = await route.fetch();
+  const body = await res.json();
+  body.data.evaluation.completion = {
+    ...body.data.evaluation.completion,
+    satisfied: true,
+    minScore: 0,
+    reason: "lama",
+  };
+  return route.fulfill({ response: res, json: body });
+};
+await page.route("**/api/students/*/evaluations/stages", tamper);
+await btn("Periksa jawaban").click();
+await page.getByText("Boleh lanjut").waitFor();
+check(
+  "(simulated stale result) UI initially trusts the old 'Boleh lanjut'",
+  await next("02").isEnabled(),
+);
+await page.unroute("**/api/students/*/evaluations/stages", tamper);
+await next("02").click();
+await page.getByTestId("completion-blocked").waitFor();
+check(
+  "server refusal refreshes the panel: now 'Belum lolos' and Lanjut is locked again",
+  (await page.getByText("Belum lolos").first().isVisible()) &&
+    (await next("02").isDisabled()) &&
+    /20\/40/.test(await page.getByTestId("completion-blocked").innerText()),
+);
+check(
+  "server refusal text is shown to the student",
+  /belum mencapai batas minimal/.test(await page.locator("main").innerText()),
+);
+
 await setMode({ score: 8 });
 // improving the work (a new submission) is needed for a fresh evaluation
 await page.fill('textarea[aria-label="Batasan"]', "isi Batasan diperbaiki");

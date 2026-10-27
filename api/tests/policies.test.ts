@@ -108,6 +108,11 @@ describe("stage completion policy", () => {
     );
   });
 
+  it("reports the minimum so clients never hardcode it", () => {
+    expect(evaluateStageCompletion(ok).minScore).toBe(20);
+    expect(evaluateStageCompletion(ok, { minScore: 25 }).minScore).toBe(25);
+  });
+
   it("explains a low score to the student with the actual numbers", () => {
     const d = evaluateStageCompletion({ ...ok, totalScore: 14 });
     expect(d.reason).toContain("14/40");

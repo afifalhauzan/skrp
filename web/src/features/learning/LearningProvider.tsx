@@ -196,6 +196,8 @@ interface LearningContextValue {
     stage: StageId,
     testResults?: ClientTestResult[],
   ): Promise<StageEvaluation>;
+  /** Re-reads the latest evaluation of a stage from the backend (it may have changed rules). */
+  refreshEvaluation(caseId: string, stage: StageId): Promise<void>;
   requestHint(
     caseId: string,
     stage: StageId,
@@ -451,6 +453,20 @@ export function LearningProvider({ children }: { children: ReactNode }) {
     [api, flush, setStore],
   );
 
+  const refreshEvaluation = useCallback(
+    async (caseId: string, stage: StageId) => {
+      const code = codeRef.current;
+      if (!code) return;
+      const [latest] = await api.getStageEvaluations(code, caseId, stage);
+      if (!latest) return;
+      setStore((s) => ({
+        ...s,
+        evaluations: { ...s.evaluations, [evalKey(caseId, stage)]: latest },
+      }));
+    },
+    [api, setStore],
+  );
+
   const requestHint = useCallback(
     async (caseId: string, stage: StageId, requestId: string) => {
       const code = codeRef.current;
@@ -627,6 +643,7 @@ export function LearningProvider({ children }: { children: ReactNode }) {
       return !!e && e.isCurrent && !store.dirty[key] && e.completion.satisfied;
     },
     evaluateStage,
+    refreshEvaluation,
     requestHint,
     hintHistory,
     routingFor: (caseId) => store.routing[caseId],

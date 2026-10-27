@@ -268,7 +268,13 @@ export interface StageEvaluation {
   feedback: string | null;
   uncertainty: { insufficientEvidence: boolean; notes: string | null } | null;
   /** The application's completion policy applied to this evaluation (not the model's opinion). */
-  completion: { policyVersion: string; satisfied: boolean; reason: string };
+  completion: {
+    policyVersion: string;
+    satisfied: boolean;
+    reason: string;
+    /** Minimum raw score needed to continue (from the backend policy). */
+    minScore: number;
+  };
   /** False once the student edits the work after this evaluation (it stays as history). */
   isCurrent: boolean;
   failure: { category: string; message: string } | null;

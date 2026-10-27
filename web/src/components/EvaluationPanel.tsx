@@ -91,6 +91,9 @@ export function EvaluationPanel({
   }
 
   const satisfied = evaluation.completion.satisfied && current;
+  const total = evaluation.totalScore ?? 0;
+  const min = evaluation.completion.minScore;
+  const belowMinimum = total < min;
   return (
     <Card className="mt-5" data-testid="evaluation-result">
       <CardContent className="space-y-4">
@@ -106,14 +109,43 @@ export function EvaluationPanel({
               </span>
             </p>
           </div>
-          <Badge variant={satisfied ? "default" : "secondary"}>
+          <Badge variant={satisfied ? "default" : "destructive"}>
             {satisfied
               ? "Boleh lanjut"
-              : current
-                ? "Belum memenuhi syarat lanjut"
-                : "Pekerjaan berubah"}
+              : !current
+                ? "Pekerjaan berubah"
+                : belowMinimum
+                  ? "Belum lolos"
+                  : "Belum memenuhi syarat lanjut"}
           </Badge>
         </div>
+
+        {/* total score against the minimum needed to continue */}
+        <div>
+          <div className="relative">
+            <Progress value={(total / evaluation.maxScore) * 100} />
+            <span
+              aria-hidden
+              className="absolute -top-1 h-4 w-0.5 rounded bg-foreground/70"
+              style={{ left: `${(min / evaluation.maxScore) * 100}%` }}
+            />
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Batas minimal untuk lanjut: {min}/{evaluation.maxScore}
+          </p>
+        </div>
+
+        {current && !evaluation.completion.satisfied && (
+          <Alert variant="destructive" data-testid="completion-blocked">
+            <XCircle />
+            <AlertTitle>
+              {belowMinimum
+                ? "Belum bisa lanjut ke tahap berikutnya"
+                : "Belum memenuhi syarat lanjut"}
+            </AlertTitle>
+            <AlertDescription>{evaluation.completion.reason}</AlertDescription>
+          </Alert>
+        )}
 
         {!current && (
           <Alert>
@@ -186,15 +218,10 @@ export function EvaluationPanel({
           </Alert>
         )}
 
-        {!evaluation.completion.satisfied && current && (
-          <p className="text-xs text-muted-foreground">
-            {evaluation.completion.reason}
-          </p>
-        )}
         <p className="text-[11px] leading-4 text-muted-foreground">
           Penilaian AI ini bersifat sementara untuk membantu belajar, bukan
-          nilai akhir. Kelayakan lanjut ditentukan aturan aplikasi (
-          {evaluation.completion.policyVersion}), bukan oleh AI.
+          nilai akhir. Boleh atau tidaknya kamu lanjut ditentukan oleh aturan
+          aplikasi, bukan oleh AI.
         </p>
       </CardContent>
     </Card>
