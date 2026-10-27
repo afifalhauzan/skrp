@@ -34,18 +34,13 @@ async function main() {
     console.log(`seeded ${ROSTER.length} students`);
 
     // Special accounts are keyed by their code; they have no attendance number.
-    for (const { studentCode } of SPECIAL_ACCOUNTS) {
+    for (const { studentCode, name } of SPECIAL_ACCOUNTS) {
       await prisma.student.upsert({
         where: { studentCode },
-        create: {
-          studentCode,
-          attendanceNumber: null,
-          name: null,
-          className: null,
-        },
-        update: {},
+        create: { studentCode, attendanceNumber: null, name, className: null },
+        update: { name },
       });
-      console.log(`${studentCode}  (special account)`);
+      console.log(`${studentCode}  ${name}  (special account)`);
     }
   } finally {
     await prisma.$disconnect();

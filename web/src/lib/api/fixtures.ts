@@ -18,4 +18,7 @@ export const MOCK_STUDENTS: StudentProfile[] = [
   },
   // Deliberately nameless: exercises the "roster not supplied yet" UI path.
   { studentCode: "PY003", name: null, className: null },
+  // Special accounts: no class, custom name (mirrors api/prisma/roster.ts).
+  { studentCode: "VALIDATOR001", name: "[MOCK] Validator 1", className: null },
+  { studentCode: "VALIDATOR002", name: "[MOCK] Validator 2", className: null },
 ];

@@ -48,10 +48,13 @@ const NAMES: [number, string][] = [
   [35, "ZAIMAH VIKA NAFISAH"],
 ];
 
-/** Special non-roster accounts. No attendance number, no class, no name. */
-export const SPECIAL_ACCOUNTS: { studentCode: string }[] = [
-  { studentCode: "VALIDATOR001" },
-  { studentCode: "VALIDATOR002" },
+/**
+ * Special non-roster accounts. They have no attendance number and no class.
+ * Replace the placeholder names below with the real ones; `pnpm seed` syncs them.
+ */
+export const SPECIAL_ACCOUNTS: { studentCode: string; name: string }[] = [
+  { studentCode: "VALIDATOR001", name: "Validator 1" },
+  { studentCode: "VALIDATOR002", name: "Validator 2" },
 ];
 
 export const ROSTER: RosterEntry[] = NAMES.map(([attendanceNumber, name]) => ({
