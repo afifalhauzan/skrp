@@ -208,8 +208,7 @@ function OutputPanel({
       )}
       <p className="mt-3 text-[11px] text-zinc-400">
         Dijalankan di browsermu dengan Pyodide
-        {result.runtimeVersion ? ` ${result.runtimeVersion}` : ""}. Hasil ini
-        bukan bukti penilaian yang terverifikasi.
+        {result.runtimeVersion ? ` ${result.runtimeVersion}` : ""}
       </p>
     </div>
   );
