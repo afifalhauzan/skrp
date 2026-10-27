@@ -117,12 +117,12 @@ function WorkspaceInner({
             <h1 className="mt-2 font-heading text-2xl font-bold leading-tight sm:text-3xl">
               {item.title}
             </h1>
-            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            {/* <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
               {item.context}
-            </p>
+            </p> */}
           </div>
           <LinkButton href={`/case-review/${caseId}`} variant="outline">
-            Lihat progres
+            Lihat perkembangan
           </LinkButton>
         </div>
         <ProgressBar
@@ -231,8 +231,7 @@ function WorkspaceInner({
                 <Badge variant="secondary">Tujuan misi</Badge>
                 <p className="mt-3 text-sm leading-6">{item.goal}</p>
                 <p className="mt-3 text-xs leading-5 text-muted-foreground">
-                  Tahap ditandai selesai setelah hasil kerjanya terisi; ini
-                  bukan penilaian akhir.
+                  Tahap ditandai selesai setelah hasil kerjanya terisi
                 </p>
               </CardContent>
             </Card>

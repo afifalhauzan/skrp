@@ -47,7 +47,7 @@ function MissionBriefing() {
             </span>
           </Badge>
           <Badge variant="outline">
-            <Clock /> 45 menit
+            <Clock /> 15 menit
           </Badge>
         </div>
         <div>
@@ -61,7 +61,7 @@ function MissionBriefing() {
               Konteks dunia nyata · Pos gerbang Mall Grand Metro
             </CardDescription>
           </CardHeader>
-          <CardContent className="leading-7">
+          <CardContent className="leading-6">
             Pengelola parkir pusat perbelanjaan Grand Metro membutuhkan sistem
             terkomputerisasi untuk menghitung biaya parkir kendaraan roda empat
             (mobil) dan roda dua (motor). Selama ini pencatatan manual sering

@@ -99,17 +99,6 @@ export default function Login() {
                 {busy ? "Memeriksa…" : "Masuk ke pembelajaran"}
               </Button>
             </form>
-            <p className="mt-4 text-xs leading-5 text-muted-foreground">
-              Kode siswa hanya mengenali catatan belajarmu; ini bukan kata sandi
-              dan belum merupakan autentikasi.
-              {mode === "mock" && (
-                <>
-                  {" "}
-                  Mode mock · kode contoh:{" "}
-                  {MOCK_STUDENTS.map((s) => s.studentCode).join(" · ")}
-                </>
-              )}
-            </p>
           </CardContent>
         </Card>
       </main>
