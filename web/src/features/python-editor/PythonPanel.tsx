@@ -1,6 +1,10 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Button, Label } from "@/components/Shell";
+import { Loader2, Play, Square } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import { CodeEditor } from "./CodeEditor";
 import { createPythonRunner } from "./runnerClient";
 import {
@@ -57,50 +61,46 @@ export function PythonPanel({
   const current = isResultCurrent(result, source, stdin);
 
   return (
-    <div className="space-y-5">
-      <div>
+    <div className="space-y-4">
+      <div className="space-y-2">
         <Label>Editor Python</Label>
         <CodeEditor value={source} onChange={onSourceChange} />
       </div>
 
-      <div>
-        <label
-          htmlFor="stdin"
-          className="mb-1 block text-sm font-bold text-navy"
-        >
-          Input (stdin)
-        </label>
-        <p className="mb-2 text-xs text-muted">
-          Satu nilai per baris, sesuai urutan pemanggilan <code>input()</code>{" "}
-          pada programmu.
-        </p>
-        <textarea
+      <div className="space-y-2">
+        <Label htmlFor="stdin">Input (stdin)</Label>
+        <Textarea
           id="stdin"
           value={stdin}
           onChange={(e) => onStdinChange(e.target.value)}
-          rows={4}
+          rows={3}
           spellCheck={false}
           placeholder={"mobil\n2"}
-          className="w-full rounded-xl border border-[#d8e4dd] bg-[#fbfdfb] p-3 font-mono text-sm leading-6 outline-none focus:border-teal focus:ring-2 focus:ring-mint"
+          className="font-mono text-sm"
         />
+        <p className="text-xs text-muted-foreground">
+          Satu nilai per baris, sesuai urutan pemanggilan <code>input()</code>{" "}
+          pada programmu.
+        </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2">
         <Button onClick={run} disabled={running}>
-          {running ? "Menjalankan…" : "▶ Jalankan"}
+          {running ? <Loader2 className="animate-spin" /> : <Play />}
+          {running ? "Menjalankan…" : "Jalankan kode"}
         </Button>
         {running && (
-          <Button variant="secondary" onClick={() => runner.current?.stop()}>
-            ■ Hentikan
+          <Button variant="outline" onClick={() => runner.current?.stop()}>
+            <Square /> Hentikan
           </Button>
         )}
         {running && !loadedOnce && (
-          <span className="font-mono text-[10px] uppercase tracking-widest text-muted">
+          <span className="text-xs text-muted-foreground">
             Memuat runtime Python pertama kali…
           </span>
         )}
         {saveStatus && (
-          <span className="ml-auto font-mono text-[10px] uppercase tracking-widest text-muted">
+          <span className="ml-auto text-xs text-muted-foreground">
             {saveStatus}
           </span>
         )}
@@ -120,32 +120,40 @@ function OutputPanel({
 }) {
   if (!result) {
     return (
-      <div className="rounded-xl bg-[#111c22] p-4 font-mono text-sm text-[#8cb99e]">
-        Belum ada hasil. Tekan “Jalankan” untuk mengeksekusi kodemu.
+      <div className="rounded-xl bg-zinc-950 p-4 font-mono text-sm text-zinc-400">
+        Belum ada hasil. Tekan “Jalankan kode” untuk mengeksekusi kodemu.
       </div>
     );
   }
   const missingInput = result.stdinExhausted;
   return (
     <div
-      className={`rounded-xl bg-[#111c22] p-4 font-mono text-sm text-[#c6f6d8] ${stale ? "opacity-60" : ""}`}
+      className={cn(
+        "rounded-xl bg-zinc-950 p-4 font-mono text-sm text-emerald-200",
+        stale && "opacity-60",
+      )}
       aria-live="polite"
       data-testid="output-panel"
     >
       <div className="mb-3 flex flex-wrap items-center gap-3 text-xs">
-        <span className="font-bold uppercase tracking-widest text-[#8cb99e]">
-          Output
+        <span className="font-semibold uppercase tracking-wide text-zinc-400">
+          Terminal
         </span>
         <span
-          className={`px-2 py-1 font-bold uppercase tracking-widest ${result.status === "ok" ? "bg-[#1f4d3a] text-[#c6f6d8]" : "bg-[#5a2a24] text-[#ffd0c7]"}`}
+          className={cn(
+            "rounded-full px-2 py-0.5 font-semibold",
+            result.status === "ok"
+              ? "bg-emerald-900 text-emerald-100"
+              : "bg-red-950 text-red-200",
+          )}
         >
           {STATUS_LABEL[result.status]}
         </span>
-        <span className="text-[#8cb99e]">{result.durationMs} ms</span>
+        <span className="text-zinc-400">{result.durationMs} ms</span>
       </div>
 
       {stale && (
-        <p className="mb-3 border border-[#8cb99e]/40 p-2 text-xs text-[#ffe9a8]">
+        <p className="mb-3 rounded-md border border-amber-200/40 p-2 text-xs text-amber-200">
           Hasil ini berasal dari versi kode atau input sebelumnya. Jalankan lagi
           untuk melihat hasil terbaru.
         </p>
@@ -155,28 +163,28 @@ function OutputPanel({
         <pre className="whitespace-pre-wrap">{result.stdout}</pre>
       )}
       {!result.stdout && result.status === "ok" && (
-        <p className="text-[#8cb99e]">
+        <p className="text-zinc-400">
           (program selesai tanpa mencetak apa pun)
         </p>
       )}
       {result.stderr && (
-        <pre className="mt-2 whitespace-pre-wrap text-[#ffd0c7]">
+        <pre className="mt-2 whitespace-pre-wrap text-red-300">
           {result.stderr}
         </pre>
       )}
       {result.traceback && (
-        <pre className="mt-2 whitespace-pre-wrap text-[#ffb3a5]">
+        <pre className="mt-2 whitespace-pre-wrap text-red-400">
           {result.traceback}
         </pre>
       )}
       {missingInput && (
-        <p className="mt-3 border border-[#ffe9a8]/50 p-2 text-xs text-[#ffe9a8]">
+        <p className="mt-3 rounded-md border border-amber-200/50 p-2 text-xs text-amber-200">
           Program meminta input ke-{result.stdinLines + 1}, tetapi hanya{" "}
           {result.stdinLines} baris yang diisi di panel Input (stdin). Tambahkan
           satu baris untuk setiap pemanggilan <code>input()</code>.
         </p>
       )}
-      <p className="mt-3 text-[10px] text-[#8cb99e]">
+      <p className="mt-3 text-[11px] text-zinc-400">
         Dijalankan di browsermu dengan Pyodide
         {result.runtimeVersion ? ` ${result.runtimeVersion}` : ""}. Hasil ini
         bukan bukti penilaian yang terverifikasi.

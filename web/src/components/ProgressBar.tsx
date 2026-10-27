@@ -1,7 +1,9 @@
+import { Check } from "lucide-react";
 import { stages } from "@/lib/mock-data";
+import { cn } from "@/lib/utils";
 import type { StageId } from "@/lib/types";
+
 export function ProgressBar({
-  caseId,
   current,
   completed,
   onNavigate,
@@ -12,7 +14,7 @@ export function ProgressBar({
   onNavigate: (id: StageId) => void;
 }) {
   return (
-    <div className="grid grid-cols-2 gap-px border border-[#dce6ef] bg-[#dce6ef] md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
       {stages.map((stage, index) => {
         const done = completed.includes(stage.id);
         const active = stage.id === current;
@@ -26,13 +28,20 @@ export function ProgressBar({
             key={stage.id}
             onClick={() => available && onNavigate(stage.id)}
             disabled={!available}
-            className={`p-4 text-left transition ${active ? "bg-[#e9eef5]" : done ? "bg-white" : "bg-[#f8fbfe] opacity-55"} disabled:cursor-not-allowed`}
+            className={cn(
+              "rounded-xl border p-3 text-left transition disabled:cursor-not-allowed disabled:opacity-50",
+              active
+                ? "border-primary bg-primary/10"
+                : done
+                  ? "bg-background hover:bg-muted"
+                  : "bg-muted/50",
+            )}
           >
-            <div className="flex items-center justify-between font-mono text-[10px] tracking-widest text-muted">
+            <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
               <span>{stage.short}</span>
-              {done && <span>DONE</span>}
+              {done && <Check className="size-3.5 text-primary" />}
             </div>
-            <div className="mt-2 text-sm font-bold text-ink">{stage.label}</div>
+            <div className="mt-1 text-sm font-semibold">{stage.label}</div>
           </button>
         );
       })}

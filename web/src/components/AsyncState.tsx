@@ -1,18 +1,22 @@
 "use client";
 import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Shell } from "./Shell";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Shell } from "./Shell";
 import { useLearning } from "@/features/learning/LearningProvider";
+import { containerCls } from "@/lib/ui";
+import { cn } from "@/lib/utils";
 
 export function LoadingCard({ label = "Memuat…" }: { label?: string }) {
   return (
-    <Card className="mx-auto max-w-md text-center">
-      <p
-        role="status"
-        className="font-mono text-[11px] uppercase tracking-widest text-muted"
-      >
-        {label}
-      </p>
+    <Card className="mx-auto max-w-md">
+      <CardContent className="text-center">
+        <p role="status" className="text-sm text-muted-foreground">
+          {label}
+        </p>
+      </CardContent>
     </Card>
   );
 }
@@ -25,19 +29,22 @@ export function ErrorCard({
   onRetry?: () => void;
 }) {
   return (
-    <Card className="mx-auto max-w-md border-coral/40">
-      <p className="text-sm font-bold text-coral">Terjadi masalah</p>
-      <p role="alert" className="mt-2 text-sm leading-6 text-muted">
-        {message}
-      </p>
-      {onRetry && (
-        <div className="mt-4">
-          <Button variant="secondary" onClick={onRetry}>
+    <Alert variant="destructive" className="mx-auto max-w-md">
+      <AlertTitle>Terjadi masalah</AlertTitle>
+      <AlertDescription>
+        <p role="alert">{message}</p>
+        {onRetry && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={onRetry}
+          >
             Coba lagi
           </Button>
-        </div>
-      )}
-    </Card>
+        )}
+      </AlertDescription>
+    </Alert>
   );
 }
 
@@ -56,7 +63,7 @@ export function StudentGate({ children }: { children: ReactNode }) {
   if (load.status === "ready") return <>{children}</>;
   return (
     <Shell>
-      <main className="mx-auto max-w-[1024px] px-8 py-16">
+      <main className={cn(containerCls, "py-16")}>
         {load.status === "error" ? (
           <ErrorCard
             message={
