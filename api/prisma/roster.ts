@@ -53,7 +53,7 @@ const NAMES: [number, string][] = [
  * Replace the placeholder names below with the real ones; `pnpm seed` syncs them.
  */
 export const SPECIAL_ACCOUNTS: { studentCode: string; name: string }[] = [
-  { studentCode: "VALIDATOR001", name: "Validator 1" },
+  { studentCode: "VALIDATOR001", name: "Bu Maurish" },
   { studentCode: "VALIDATOR002", name: "Validator 2" },
 ];
 
