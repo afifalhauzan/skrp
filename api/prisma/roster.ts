@@ -8,6 +8,8 @@ export interface RosterEntry {
   className?: string | null;
 }
 
+const CLASS_NAME = "XII 1";
+
 const NAMES: [number, string][] = [
   [1, "ALFARIZI WIDYADANA BUDIANTORO"],
   [2, "ALMIRAH NABILAH PUTRI TIARA"],
@@ -49,4 +51,5 @@ const NAMES: [number, string][] = [
 export const ROSTER: RosterEntry[] = NAMES.map(([attendanceNumber, name]) => ({
   attendanceNumber,
   name,
+  className: CLASS_NAME,
 }));
