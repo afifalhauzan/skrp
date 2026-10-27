@@ -1,0 +1,103 @@
+// Owned exclusively by the Express API. The Next.js app never imports Prisma.
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum StageId {
+  understand
+  design
+  implement
+  test
+}
+
+enum CaseStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum ArtifactKind {
+  PROBLEM_SPEC
+  PSEUDOCODE
+  REFLECTION
+}
+
+model Student {
+  id               String   @id @default(uuid()) @db.Uuid
+  /// Public identifier, always derived from attendanceNumber (PY001, PY002, ...).
+  studentCode      String   @unique
+  /// Null until the real roster is supplied.
+  name             String?
+  attendanceNumber Int      @unique
+  className        String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  caseProgress  CaseProgress[]
+  artifacts     StudentArtifact[]
+  codeRevisions CodeRevision[]
+
+  @@map("students")
+}
+
+model CaseProgress {
+  id              String     @id @default(uuid()) @db.Uuid
+  studentId       String     @db.Uuid
+  caseId          String
+  status          CaseStatus @default(NOT_STARTED)
+  currentStage    StageId    @default(understand)
+  completedStages StageId[]
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, caseId])
+  @@map("case_progress")
+}
+
+/// Saved non-code work. One row per (student, case, kind). The final reflection
+/// is not tied to a case and uses caseId = "journey".
+model StudentArtifact {
+  id        String       @id @default(uuid()) @db.Uuid
+  studentId String       @db.Uuid
+  caseId    String
+  kind      ArtifactKind
+  content   Json
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, caseId, kind])
+  @@map("student_artifacts")
+}
+
+/// Append-only history of a student's Python source for a case.
+model CodeRevision {
+  id             String   @id @default(uuid()) @db.Uuid
+  studentId      String   @db.Uuid
+  caseId         String
+  revisionNumber Int
+  source         String
+  stdin          String   @default("")
+  /// Client-reported Pyodide run metadata for this exact source + stdin. Not verified evidence.
+  execution      Json?
+  createdAt      DateTime @default(now())
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, caseId, revisionNumber])
+  @@index([studentId, caseId, createdAt])
+  @@map("code_revisions")
+}
