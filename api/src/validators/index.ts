@@ -103,7 +103,7 @@ export const importStudentsBody = z
 
 export const listStudentsQuery = z.object({
   limit: z.coerce.number().int().min(1).max(200).default(100),
-  after: z.coerce.number().int().min(0).default(0),
+  after: z.string().max(40).default(""),
 });
 
 // ---- learning --------------------------------------------------------------

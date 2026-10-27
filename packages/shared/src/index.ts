@@ -48,7 +48,8 @@ export interface StudentProfile {
 /** Administrative view of a student record. */
 export interface StudentRecord extends StudentProfile {
   id: string;
-  attendanceNumber: number;
+  /** Null for special accounts (e.g. VALIDATOR001). */
+  attendanceNumber: number | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

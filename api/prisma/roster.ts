@@ -48,6 +48,12 @@ const NAMES: [number, string][] = [
   [35, "ZAIMAH VIKA NAFISAH"],
 ];
 
+/** Special non-roster accounts. No attendance number, no class, no name. */
+export const SPECIAL_ACCOUNTS: { studentCode: string }[] = [
+  { studentCode: "VALIDATOR001" },
+  { studentCode: "VALIDATOR002" },
+];
+
 export const ROSTER: RosterEntry[] = NAMES.map(([attendanceNumber, name]) => ({
   attendanceNumber,
   name,

@@ -6,7 +6,7 @@ import { useLearning } from "@/features/learning/LearningProvider";
 import { ApiClientError } from "@/lib/api";
 import { MOCK_STUDENTS } from "@/lib/api/fixtures";
 
-const CODE_FORMAT = /^PY\d{3,}$/;
+const CODE_FORMAT = /^(PY\d{3,}|VALIDATOR\d{3})$/;
 
 export default function Login() {
   const router = useRouter();

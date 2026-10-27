@@ -11,6 +11,12 @@ export const MIN_ATTENDANCE_NUMBER = 1;
 export const MAX_ATTENDANCE_NUMBER = 999_999;
 
 const CODE_PATTERN = /^PY(\d{3,})$/;
+/** Reserved non-roster accounts such as VALIDATOR001. They have no attendance number. */
+const SPECIAL_PATTERN = /^VALIDATOR\d{3}$/;
+
+export function isSpecialCode(code: string): boolean {
+  return SPECIAL_PATTERN.test(code);
+}
 
 export function isValidAttendanceNumber(value: unknown): value is number {
   return (
@@ -33,6 +39,7 @@ export function formatStudentCode(attendanceNumber: number): string {
 /** Normalises user input (`py001`, ` PY001 `) to canonical form, or null when malformed. */
 export function normalizeStudentCode(input: string): string | null {
   const value = input.trim().toUpperCase();
+  if (isSpecialCode(value)) return value;
   const match = CODE_PATTERN.exec(value);
   if (!match) return null;
   const number = Number(match[1]);
@@ -43,7 +50,7 @@ export function normalizeStudentCode(input: string): string | null {
 
 export function attendanceNumberFromCode(code: string): number | null {
   const normalized = normalizeStudentCode(code);
-  return normalized
+  return normalized && !isSpecialCode(normalized)
     ? Number(normalized.slice(STUDENT_CODE_PREFIX.length))
     : null;
 }

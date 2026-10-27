@@ -13,10 +13,10 @@ export class StudentRepository {
     return this.prisma.student.findUnique({ where: { studentCode } });
   }
 
-  list(limit: number, afterAttendance: number): Promise<Student[]> {
+  list(limit: number, afterCode: string): Promise<Student[]> {
     return this.prisma.student.findMany({
-      where: { attendanceNumber: { gt: afterAttendance } },
-      orderBy: { attendanceNumber: "asc" },
+      where: afterCode ? { studentCode: { gt: afterCode } } : {},
+      orderBy: { studentCode: "asc" },
       take: limit,
     });
   }

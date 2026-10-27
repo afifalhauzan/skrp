@@ -24,13 +24,13 @@ export class StudentService {
 
   async list(
     limit: number,
-    after: number,
-  ): Promise<{ students: StudentRecord[]; next: number | null }> {
+    after: string,
+  ): Promise<{ students: StudentRecord[]; next: string | null }> {
     const rows = await this.students.list(limit, after);
     const last = rows[rows.length - 1];
     return {
       students: rows.map(toRecord),
-      next: rows.length === limit && last ? last.attendanceNumber : null,
+      next: rows.length === limit && last ? last.studentCode : null,
     };
   }
 

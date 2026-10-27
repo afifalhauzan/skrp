@@ -8,7 +8,7 @@
  */
 import { PrismaClient } from "@prisma/client";
 import { formatStudentCode } from "../src/lib/studentCode";
-import { ROSTER } from "./roster";
+import { ROSTER, SPECIAL_ACCOUNTS } from "./roster";
 
 async function main() {
   const prisma = new PrismaClient();
@@ -32,6 +32,21 @@ async function main() {
       console.log(`${student.studentCode}  ${student.name}`);
     }
     console.log(`seeded ${ROSTER.length} students`);
+
+    // Special accounts are keyed by their code; they have no attendance number.
+    for (const { studentCode } of SPECIAL_ACCOUNTS) {
+      await prisma.student.upsert({
+        where: { studentCode },
+        create: {
+          studentCode,
+          attendanceNumber: null,
+          name: null,
+          className: null,
+        },
+        update: {},
+      });
+      console.log(`${studentCode}  (special account)`);
+    }
   } finally {
     await prisma.$disconnect();
   }
