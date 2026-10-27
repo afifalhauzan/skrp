@@ -61,6 +61,20 @@ for (const label of ["Tujuan", "Input", "Proses", "Output", "Batasan"]) {
 }
 check("Lanjut is locked before evaluation", await next("02").isDisabled());
 
+// a low score (4 x 4 = 16 < 20) gives feedback but does not let the student continue
+await setMode({ score: 4 });
+await btn("Periksa jawaban").click();
+await page.getByText("Belum memenuhi syarat lanjut").waitFor();
+const low = await page.getByTestId("evaluation-result").innerText();
+check(
+  "score below 20/40 shows feedback and the minimum, and blocks Lanjut",
+  low.includes("16/40") && /20\/40/.test(low) && (await next("02").isDisabled()),
+  low.replace(/\s+/g, " ").slice(0, 80),
+);
+await setMode({ score: 8 });
+// improving the work (a new submission) is needed for a fresh evaluation
+await page.fill('textarea[aria-label="Batasan"]', "isi Batasan diperbaiki");
+
 // failure: provider timeout
 await setMode({ evaluate: "fail" });
 await btn("Periksa jawaban").click();

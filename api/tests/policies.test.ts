@@ -8,7 +8,10 @@ import {
   aggregateCaseEvaluation,
   type StageEvidence,
 } from "../src/policies/caseEvaluation";
-import { evaluateStageCompletion } from "../src/policies/completion";
+import {
+  DEFAULT_MIN_STAGE_SCORE,
+  evaluateStageCompletion,
+} from "../src/policies/completion";
 import {
   createRoutingPolicy,
   ROUTING_POLICY_VERSION,
@@ -84,13 +87,31 @@ describe("stage completion policy", () => {
   const ok = {
     status: "COMPLETED" as const,
     isCurrent: true,
-    totalScore: 5,
+    totalScore: 32,
     maxScore: 40,
     insufficientEvidence: false,
   };
 
-  it("a completed evaluation of the current work satisfies the provisional policy (no threshold yet)", () => {
-    expect(evaluateStageCompletion(ok).satisfied).toBe(true);
+  it("a stage needs at least 20 of 40 points by default (below 20 cannot continue)", () => {
+    expect(DEFAULT_MIN_STAGE_SCORE).toBe(20);
+    expect(evaluateStageCompletion({ ...ok, totalScore: 19 }).satisfied).toBe(
+      false,
+    );
+    expect(evaluateStageCompletion({ ...ok, totalScore: 20 }).satisfied).toBe(
+      true,
+    );
+    expect(evaluateStageCompletion({ ...ok, totalScore: 40 }).satisfied).toBe(
+      true,
+    );
+    expect(evaluateStageCompletion({ ...ok, totalScore: 0 }).satisfied).toBe(
+      false,
+    );
+  });
+
+  it("explains a low score to the student with the actual numbers", () => {
+    const d = evaluateStageCompletion({ ...ok, totalScore: 14 });
+    expect(d.reason).toContain("14/40");
+    expect(d.reason).toContain("20/40");
   });
 
   it.each([
@@ -98,16 +119,17 @@ describe("stage completion policy", () => {
     ["failed", { ...ok, status: "FAILED" as const }],
     ["outdated work", { ...ok, isCurrent: false }],
     ["insufficient evidence", { ...ok, insufficientEvidence: true }],
-  ])("is not satisfied for %s", (_name, input) => {
+  ])("is not satisfied for %s even with a high score", (_name, input) => {
     expect(evaluateStageCompletion(input).satisfied).toBe(false);
   });
 
-  it("applies a score threshold only when one is configured", () => {
-    expect(evaluateStageCompletion(ok, { minScoreRatio: 0.5 }).satisfied).toBe(
-      false,
-    );
+  it("the minimum is configurable, and 0 disables it", () => {
     expect(
-      evaluateStageCompletion({ ...ok, totalScore: 30 }, { minScoreRatio: 0.5 })
+      evaluateStageCompletion({ ...ok, totalScore: 25 }, { minScore: 30 })
+        .satisfied,
+    ).toBe(false);
+    expect(
+      evaluateStageCompletion({ ...ok, totalScore: 2 }, { minScore: 0 })
         .satisfied,
     ).toBe(true);
   });

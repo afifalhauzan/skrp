@@ -443,6 +443,75 @@ describe.skipIf(!url)(
         );
       });
 
+      it("a stage scoring below 20/40 cannot continue, but feedback is kept and the student can improve and re-check", async () => {
+        const fake = fakeRunner();
+        // 4 criteria x 4 = 16 < 20
+        fake.evaluate.mockImplementationOnce((req: StructuredRequest) =>
+          evaluationOutput(req, 4),
+        );
+        const api = build(fake);
+        await putSpec(api);
+
+        const low = await evaluate(api, "understand");
+        expect(low.status).toBe(201);
+        expect(low.body.data.evaluation).toMatchObject({
+          status: "COMPLETED",
+          totalScore: 16,
+        });
+        expect(low.body.data.evaluation.completion.satisfied).toBe(false);
+        expect(low.body.data.evaluation.completion.reason).toContain("16/40");
+        expect(low.body.data.evaluation.feedback).toBeTruthy();
+
+        const blocked = await complete(api, ["understand"]);
+        expect(blocked.status).toBe(409);
+        expect(blocked.body.error.code).toBe("INVALID_STATE");
+        expect(blocked.body.error.message).toContain("20/40");
+
+        // improving the work produces a new evaluation that passes
+        await putSpec(api, "case-1", {
+          ...SPEC,
+          process: "aturan tarif lengkap dengan batas maksimum",
+        });
+        const better = await evaluate(api, "understand");
+        expect(better.body.data.evaluation.totalScore).toBe(32);
+        expect((await complete(api, ["understand"])).status).toBe(200);
+        expect(await prisma.stageEvaluation.count()).toBe(2); // the low one is kept as history
+      });
+
+      it("exactly 20/40 is enough to continue; 19/40 is not", async () => {
+        const exact = fakeRunner();
+        // 5+5+5+5 = 20
+        exact.evaluate.mockImplementation((req: StructuredRequest) =>
+          evaluationOutput(req, 5),
+        );
+        const apiExact = build(exact);
+        await putSpec(apiExact);
+        const ok20 = await evaluate(apiExact, "understand");
+        expect(ok20.body.data.evaluation).toMatchObject({ totalScore: 20 });
+        expect((await complete(apiExact, ["understand"])).status).toBe(200);
+
+        await prisma.$executeRawUnsafe('TRUNCATE "students" CASCADE');
+        await prisma.student.create({
+          data: { studentCode: CODE, attendanceNumber: 1, name: "Uji" },
+        });
+        const nineteen = fakeRunner();
+        nineteen.evaluate.mockImplementation((req: StructuredRequest) =>
+          evaluationOutput(req, 5, {
+            criteria: RUBRIC.understand.map((c, i) => ({
+              key: c.key,
+              score: i === 0 ? 4 : 5,
+              evidence: "bukti",
+            })),
+          }),
+        );
+        const api19 = build(nineteen);
+        await putSpec(api19);
+        expect(
+          (await evaluate(api19, "understand")).body.data.evaluation.totalScore,
+        ).toBe(19);
+        expect((await complete(api19, ["understand"])).status).toBe(409);
+      });
+
       it("blocks completing a stage after the work changed since its evaluation", async () => {
         const api = build(fakeRunner());
         await putSpec(api);
@@ -594,13 +663,11 @@ describe.skipIf(!url)(
         const api = build(fakeRunner());
         expect(
           (
-            await api
-              .post(`${code()}/assistance/hint`)
-              .send({
-                caseId: "case-1",
-                stage: "understand",
-                requestId: "nope",
-              })
+            await api.post(`${code()}/assistance/hint`).send({
+              caseId: "case-1",
+              stage: "understand",
+              requestId: "nope",
+            })
           ).status,
         ).toBe(400);
         expect((await hint(api, "design")).status).toBe(409); // stage not reachable yet

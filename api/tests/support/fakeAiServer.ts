@@ -14,7 +14,7 @@ import { RUBRIC } from "../../src/config/rubric";
 import { AiError, type ModelRunner } from "../../src/integrations/langchain";
 import { createLogger } from "../../src/lib/logger";
 
-const mode = { evaluate: "ok", hint: "ok", delayMs: 0 };
+const mode = { evaluate: "ok", hint: "ok", delayMs: 0, score: 8 };
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const runner: ModelRunner = {
@@ -42,7 +42,7 @@ const runner: ModelRunner = {
         submissionRef,
         criteria: RUBRIC[stage].map((c) => ({
           key: c.key,
-          score: 8,
+          score: mode.score,
           evidence: `Bukti untuk ${c.label}`,
         })),
         wentWell: ["Langkah awal sudah jelas"],

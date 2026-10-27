@@ -1,17 +1,20 @@
 /**
  * Stage-completion policy. PROVISIONAL. A successful Gemini response never completes a
  * stage by itself; this application code decides, from the persisted evaluation of the
- * student's CURRENT work. No score threshold is defined yet (minScoreRatio = null).
+ * student's CURRENT work. A stage needs at least `minScore` raw points (default 20 of 40);
+ * that number is a project decision but is still unvalidated.
  */
-export const COMPLETION_POLICY_VERSION = "completion-provisional-v1";
+export const COMPLETION_POLICY_VERSION = "completion-provisional-v2";
 
 export interface CompletionConfig {
-  /** Minimum totalScore/maxScore to complete a stage, or null for "no threshold yet". */
-  minScoreRatio: number | null;
+  /** Minimum raw stage score (out of the stage maximum, 40) needed to continue; 0 = no minimum. */
+  minScore: number;
 }
 
+export const DEFAULT_MIN_STAGE_SCORE = 20;
+
 export const DEFAULT_COMPLETION_CONFIG: CompletionConfig = {
-  minScoreRatio: null,
+  minScore: DEFAULT_MIN_STAGE_SCORE,
 };
 
 export interface CompletionInput {
@@ -46,11 +49,11 @@ export function evaluateStageCompletion(
     );
   if (e.insufficientEvidence)
     return result(false, "Bukti pada pekerjaan belum cukup untuk dinilai.");
-  if (
-    config.minScoreRatio !== null &&
-    (e.totalScore ?? 0) / e.maxScore < config.minScoreRatio
-  ) {
-    return result(false, "Skor belum memenuhi ambang penyelesaian tahap.");
+  if ((e.totalScore ?? 0) < config.minScore) {
+    return result(
+      false,
+      `Skor ${e.totalScore ?? 0}/${e.maxScore} belum mencapai batas minimal ${config.minScore}/${e.maxScore}. Perbaiki pekerjaanmu sesuai umpan balik, lalu periksa ulang.`,
+    );
   }
   return result(
     true,

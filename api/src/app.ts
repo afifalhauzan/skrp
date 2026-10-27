@@ -15,7 +15,6 @@ import type { EvaluationLimits } from "./services/evaluationService";
 import type { AssistanceLimits } from "./services/assistanceService";
 import { EvaluationService } from "./services/evaluationService";
 import { createAssistancePolicy } from "./policies/assistance";
-import { DEFAULT_COMPLETION_CONFIG } from "./policies/completion";
 import { createRoutingPolicy } from "./policies/routing";
 import { ProgressController } from "./controllers/progressController";
 import { StudentController } from "./controllers/studentController";
@@ -113,7 +112,7 @@ export function createApp({
     runner: modelRunner,
     logger,
     limits: evaluationLimits,
-    completion: DEFAULT_COMPLETION_CONFIG,
+    completion: { minScore: config.stageMinScore },
     requireEvaluationForProgress:
       requireEvaluationForProgress ?? config.requireEvaluationForProgress,
   });

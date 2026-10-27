@@ -29,6 +29,8 @@ const schema = z
     AI_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120000).default(20000),
     /** Extra attempts for transient provider failures (timeouts, 429, 5xx). */
     AI_MAX_RETRIES: z.coerce.number().int().min(0).max(3).default(1),
+    /** Minimum raw stage score (of 40) to continue to the next stage. 0 disables the minimum. */
+    STAGE_MIN_SCORE: z.coerce.number().int().min(0).max(40).default(20),
     /** Dev override: enables skipping Case 2 after Case 1 when the score ratio (0-1) reaches this. */
     ROUTING_SKIP_MIN_RATIO: z.coerce.number().min(0).max(1).optional(),
     /** Stage completion requires an evaluation of the current work. Disable only for dev/rollout. */
@@ -63,6 +65,7 @@ export interface AppConfig {
   logLevel: string;
   trustProxy: number;
   routingSkipMinRatio?: number;
+  stageMinScore: number;
   requireEvaluationForProgress: boolean;
   ai: { apiKey?: string; model: string; timeoutMs: number; maxRetries: number };
 }
@@ -92,6 +95,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     logLevel: e.LOG_LEVEL ?? (e.NODE_ENV === "test" ? "silent" : "info"),
     trustProxy: e.TRUST_PROXY,
     routingSkipMinRatio: e.ROUTING_SKIP_MIN_RATIO,
+    stageMinScore: e.STAGE_MIN_SCORE,
     requireEvaluationForProgress: e.REQUIRE_EVALUATION_FOR_PROGRESS,
     ai: {
       apiKey: e.GEMINI_API_KEY,
