@@ -1,38 +1,37 @@
 /**
- * Development seed. Idempotent: re-running never duplicates rows and never
- * overwrites a name that was filled in later. All records are clearly mock data;
- * the real roster is loaded via POST /api/students/import.
+ * Seeds the class roster from prisma/roster.ts. Idempotent: students are matched by
+ * attendance number, so re-running never duplicates rows, never changes a student
+ * code, and syncs names from the roster file. className is only touched when the
+ * roster entry sets one.
+ *
+ *   pnpm --filter @skrp/api seed        (needs DATABASE_URL)
  */
 import { PrismaClient } from "@prisma/client";
 import { formatStudentCode } from "../src/lib/studentCode";
-
-const MOCK_STUDENT_COUNT = 3;
+import { ROSTER } from "./roster";
 
 async function main() {
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("Refusing to seed mock students when NODE_ENV=production.");
-  }
   const prisma = new PrismaClient();
   try {
-    for (
-      let attendanceNumber = 1;
-      attendanceNumber <= MOCK_STUDENT_COUNT;
-      attendanceNumber++
-    ) {
+    for (const entry of ROSTER) {
       const student = await prisma.student.upsert({
-        where: { attendanceNumber },
+        where: { attendanceNumber: entry.attendanceNumber },
         create: {
-          attendanceNumber,
-          studentCode: formatStudentCode(attendanceNumber),
-          name: `[MOCK] Siswa Contoh ${attendanceNumber}`,
-          className: "XII-MOCK",
+          attendanceNumber: entry.attendanceNumber,
+          studentCode: formatStudentCode(entry.attendanceNumber),
+          name: entry.name,
+          className: entry.className ?? null,
         },
-        update: {},
+        update: {
+          name: entry.name,
+          ...(entry.className !== undefined
+            ? { className: entry.className }
+            : {}),
+        },
       });
-      console.log(
-        `seeded ${student.studentCode} (${student.name ?? "no name"})`,
-      );
+      console.log(`${student.studentCode}  ${student.name}`);
     }
+    console.log(`seeded ${ROSTER.length} students`);
   } finally {
     await prisma.$disconnect();
   }

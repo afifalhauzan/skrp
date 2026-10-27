@@ -33,7 +33,7 @@ Full stack (real API + database):
 cp api/.env.example api/.env      # set DATABASE_URL
 cd api
 pnpm exec prisma migrate deploy   # or `pnpm migrate:dev` while changing the schema
-pnpm seed                         # idempotent, creates [MOCK] students PY001-PY003 (refuses NODE_ENV=production)
+pnpm seed                         # idempotent: loads the class roster (api/prisma/roster.ts) as PY001-PY035
 pnpm dev                          # http://localhost:4000
 
 # 2. frontend in live mode: in web/.env.local set
@@ -77,7 +77,7 @@ docker compose down               # stop (data stays in the pgdata volume; `down
 
 - PostgreSQL has no published port and sits on an `internal` network only. The API binds to `127.0.0.1:4000`; put a TLS reverse proxy (Caddy/nginx) for your API domain in front of it.
 - Update flow: `git pull && docker compose build && docker compose run --rm migrate && docker compose up -d api`.
-- The production image does not include the seed script (mock data must not reach production). Seed a dev database from your machine with `pnpm seed`.
+- The production image does not include the seed script (it needs `tsx`). Load the roster into the VPS database by running `pnpm seed` from your machine with `DATABASE_URL` pointing at it (e.g. via an SSH tunnel), or use the import endpoint below.
 - Optional frontend container: `docker compose --profile web up -d --build` (port 3000).
 
 ### Frontend on Vercel
