@@ -10,11 +10,17 @@ import {
   type ReactNode,
 } from "react";
 import type {
+  AssistanceHistory,
+  AssistanceInteraction,
+  CaseEvaluation,
   CaseProgress,
+  ClientTestResult,
   ExecutionMetadata,
   Flowchart,
   ProblemSpec,
   ProgressSnapshot,
+  RoutingDecision,
+  StageEvaluation,
   StageId,
   StudentProfile,
 } from "@skrp/shared";
@@ -57,7 +63,15 @@ interface Store {
   flowcharts: Record<string, Flowchart>;
   code: Record<string, CodeDraft>;
   reflection: string;
+  /** Latest stage evaluation per `${caseId}:${stage}`. */
+  evaluations: Record<string, StageEvaluation>;
+  /** Latest routing decision per case. */
+  routing: Record<string, RoutingDecision>;
+  /** Work edited since its last evaluation, per `${caseId}:${stage}`. */
+  dirty: Record<string, boolean>;
 }
+
+const evalKey = (caseId: string, stage: StageId) => `${caseId}:${stage}`;
 
 const emptyStore = (): Store => ({
   cases: {},
@@ -66,6 +80,9 @@ const emptyStore = (): Store => ({
   flowcharts: {},
   code: {},
   reflection: "",
+  evaluations: {},
+  routing: {},
+  dirty: {},
 });
 
 function restoreRun(
@@ -109,6 +126,9 @@ function fromSnapshot(snapshot: ProgressSnapshot): Store {
     } else if (a.kind === "REFLECTION" && typeof a.content === "string")
       store.reflection = a.content;
   }
+  for (const e of snapshot.stageEvaluations ?? [])
+    store.evaluations[evalKey(e.caseId, e.stage)] = e;
+  for (const d of snapshot.routing ?? []) store.routing[d.currentCaseId] = d;
   for (const r of snapshot.latestCode) {
     store.code[r.caseId] = {
       source: r.source,
@@ -161,6 +181,31 @@ interface LearningContextValue {
   /** Flushes pending autosaves now; resolves true when everything is saved. */
   saveNow(): Promise<boolean>;
   retrySave(): void;
+
+  // ---- AI evaluation, assistance and routing (live mode only) ----------------
+  /** False in mock mode: AI features are unavailable rather than faked. */
+  aiEnabled: boolean;
+  evaluationFor(caseId: string, stage: StageId): StageEvaluation | undefined;
+  /** True when the latest evaluation describes the CURRENT work (not edited since). */
+  evaluationIsCurrent(caseId: string, stage: StageId): boolean;
+  /** True when that evaluation also satisfies the (provisional) completion policy. */
+  stageSatisfied(caseId: string, stage: StageId): boolean;
+  /** Flushes autosaves, then asks the backend to evaluate the saved work. Throws ApiClientError. */
+  evaluateStage(
+    caseId: string,
+    stage: StageId,
+    testResults?: ClientTestResult[],
+  ): Promise<StageEvaluation>;
+  requestHint(
+    caseId: string,
+    stage: StageId,
+    requestId: string,
+  ): Promise<AssistanceInteraction>;
+  hintHistory(caseId: string, stage: StageId): Promise<AssistanceHistory>;
+  routingFor(caseId: string): RoutingDecision | undefined;
+  evaluateCase(
+    caseId: string,
+  ): Promise<{ caseEvaluation: CaseEvaluation; routing: RoutingDecision }>;
 }
 
 const Ctx = createContext<LearningContextValue | null>(null);
@@ -374,6 +419,85 @@ export function LearningProvider({ children }: { children: ReactNode }) {
     [api, schedule, setStore],
   );
 
+  // Stable identities: consumers use these in effect dependencies.
+  const evaluateStage = useCallback(
+    async (
+      caseId: string,
+      stage: StageId,
+      testResults?: ClientTestResult[],
+    ): Promise<StageEvaluation> => {
+      const code = codeRef.current;
+      if (!code) throw new Error("Belum masuk sebagai siswa.");
+      if (!(await flush()))
+        throw new Error(
+          "Perubahan terakhir belum tersimpan. Coba simpan ulang.",
+        );
+      const revision = storeRef.current.code[caseId]?.revision;
+      const { evaluation } = await api.evaluateStage(code, {
+        caseId,
+        stage,
+        ...((stage === "implement" || stage === "test") && revision
+          ? { codeRevision: revision }
+          : {}),
+        ...(testResults?.length ? { testResults } : {}),
+      });
+      setStore((s) => ({
+        ...s,
+        evaluations: { ...s.evaluations, [evalKey(caseId, stage)]: evaluation },
+        dirty: { ...s.dirty, [evalKey(caseId, stage)]: false },
+      }));
+      return evaluation;
+    },
+    [api, flush, setStore],
+  );
+
+  const requestHint = useCallback(
+    async (caseId: string, stage: StageId, requestId: string) => {
+      const code = codeRef.current;
+      if (!code) throw new Error("Belum masuk sebagai siswa.");
+      // Hints are based on what is saved, so push pending edits first (best effort).
+      await flush();
+      const { interaction } = await api.requestHint(code, {
+        caseId,
+        stage,
+        requestId,
+      });
+      return interaction;
+    },
+    [api, flush],
+  );
+
+  const hintHistory = useCallback(
+    async (caseId: string, stage: StageId) => {
+      const code = codeRef.current;
+      if (!code) throw new Error("Belum masuk sebagai siswa.");
+      return api.getAssistanceHistory(code, caseId, stage);
+    },
+    [api],
+  );
+
+  const evaluateCase = useCallback(
+    async (caseId: string) => {
+      const code = codeRef.current;
+      if (!code) throw new Error("Belum masuk sebagai siswa.");
+      const result = await api.evaluateCase(code, caseId);
+      setStore((s) => ({
+        ...s,
+        routing: { ...s.routing, [caseId]: result.routing },
+      }));
+      return result;
+    },
+    [api, setStore],
+  );
+
+  const markDirty = (s: Store, caseId: string, stages: StageId[]): Store => ({
+    ...s,
+    dirty: {
+      ...s.dirty,
+      ...Object.fromEntries(stages.map((st) => [evalKey(caseId, st), true])),
+    },
+  });
+
   const draftOf = (s: Store, caseId: string): CodeDraft =>
     s.code[caseId] ?? {
       source: getCodeDraft(caseId),
@@ -399,7 +523,11 @@ export function LearningProvider({ children }: { children: ReactNode }) {
     reflection: store.reflection,
 
     setSpec(caseId, spec) {
-      setStore((s) => ({ ...s, specs: { ...s.specs, [caseId]: spec } }));
+      setStore((s) =>
+        markDirty({ ...s, specs: { ...s.specs, [caseId]: spec } }, caseId, [
+          "understand",
+        ]),
+      );
       schedule(`spec:${caseId}`, () =>
         api.saveArtifact(codeRef.current!, caseId, "PROBLEM_SPEC", {
           content: storeRef.current.specs[caseId] ?? spec,
@@ -407,10 +535,13 @@ export function LearningProvider({ children }: { children: ReactNode }) {
       );
     },
     setPseudocode(caseId, text) {
-      setStore((s) => ({
-        ...s,
-        pseudocode: { ...s.pseudocode, [caseId]: text },
-      }));
+      setStore((s) =>
+        markDirty(
+          { ...s, pseudocode: { ...s.pseudocode, [caseId]: text } },
+          caseId,
+          ["design"],
+        ),
+      );
       schedule(`pseudo:${caseId}`, () =>
         api.saveArtifact(codeRef.current!, caseId, "PSEUDOCODE", {
           content: storeRef.current.pseudocode[caseId] ?? text,
@@ -418,10 +549,13 @@ export function LearningProvider({ children }: { children: ReactNode }) {
       );
     },
     setFlowchart(caseId, flowchart) {
-      setStore((s) => ({
-        ...s,
-        flowcharts: { ...s.flowcharts, [caseId]: flowchart },
-      }));
+      setStore((s) =>
+        markDirty(
+          { ...s, flowcharts: { ...s.flowcharts, [caseId]: flowchart } },
+          caseId,
+          ["design"],
+        ),
+      );
       schedule(`flow:${caseId}`, () =>
         api.saveArtifact(codeRef.current!, caseId, "FLOWCHART", {
           content: JSON.stringify(
@@ -431,10 +565,17 @@ export function LearningProvider({ children }: { children: ReactNode }) {
       );
     },
     setCode(caseId, patch) {
-      setStore((s) => ({
-        ...s,
-        code: { ...s.code, [caseId]: { ...draftOf(s, caseId), ...patch } },
-      }));
+      setStore((s) => {
+        const next = {
+          ...s,
+          code: { ...s.code, [caseId]: { ...draftOf(s, caseId), ...patch } },
+        };
+        // Only the source counts as "changed work"; tweaking stdin does not invalidate it.
+        return patch.source !== undefined &&
+          patch.source !== draftOf(s, caseId).source
+          ? markDirty(next, caseId, ["implement", "test"])
+          : next;
+      });
       saveCode(caseId);
     },
     recordRun(caseId, run) {
@@ -472,6 +613,24 @@ export function LearningProvider({ children }: { children: ReactNode }) {
       setStore((s) => ({ ...s, cases: { ...s.cases, [caseId]: saved } }));
     },
     saveNow: flush,
+
+    aiEnabled: api.aiEnabled,
+    evaluationFor: (caseId, stage) => store.evaluations[evalKey(caseId, stage)],
+    evaluationIsCurrent(caseId, stage) {
+      const key = evalKey(caseId, stage);
+      const e = store.evaluations[key];
+      return !!e && e.isCurrent && !store.dirty[key];
+    },
+    stageSatisfied(caseId, stage) {
+      const key = evalKey(caseId, stage);
+      const e = store.evaluations[key];
+      return !!e && e.isCurrent && !store.dirty[key] && e.completion.satisfied;
+    },
+    evaluateStage,
+    requestHint,
+    hintHistory,
+    routingFor: (caseId) => store.routing[caseId],
+    evaluateCase,
     retrySave() {
       const tasks = [...failed.current.entries()];
       failed.current.clear();

@@ -29,9 +29,9 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   const requestId = req.id;
 
   if (err instanceof AppError) {
-    res
-      .status(err.status)
-      .json(bodyOf(err.code, err.message, requestId, err.details));
+    const body = bodyOf(err.code, err.message, requestId, err.details);
+    if (err.meta) body.error.meta = err.meta;
+    res.status(err.status).json(body);
     return;
   }
   if (err instanceof ZodError) {

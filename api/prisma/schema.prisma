@@ -21,6 +21,40 @@ enum CaseStatus {
   NOT_STARTED
   IN_PROGRESS
   COMPLETED
+  /// Bypassed by the routing policy. Never counts as completed.
+  SKIPPED
+}
+
+enum EvaluationStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum AssistanceLevel {
+  L1
+  L2
+  L3
+  L4
+  L5
+}
+
+enum AssistanceStatus {
+  GENERATED
+  /// Static text shown because the model call failed. Not a model-generated answer.
+  FALLBACK
+}
+
+enum CaseEvaluationStatus {
+  COMPLETED
+  INSUFFICIENT_EVIDENCE
+}
+
+enum RoutingStatus {
+  ADVANCE
+  ADVANCE_WITH_SKIP
+  HOLD_INSUFFICIENT_EVIDENCE
+  JOURNEY_COMPLETE
 }
 
 enum ArtifactKind {
@@ -44,9 +78,14 @@ model Student {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  caseProgress  CaseProgress[]
-  artifacts     StudentArtifact[]
-  codeRevisions CodeRevision[]
+  caseProgress      CaseProgress[]
+  artifacts         StudentArtifact[]
+  codeRevisions     CodeRevision[]
+  artifactRevisions ArtifactRevision[]
+  stageEvaluations  StageEvaluation[]
+  assistance        AssistanceInteraction[]
+  caseEvaluations   CaseEvaluation[]
+  routingDecisions  RoutingDecision[]
 
   @@map("students")
 }
@@ -98,9 +137,173 @@ model CodeRevision {
   execution      Json?
   createdAt      DateTime @default(now())
 
-  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student          Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  stageEvaluations StageEvaluation[]
 
   @@unique([studentId, caseId, revisionNumber])
   @@index([studentId, caseId, createdAt])
   @@map("code_revisions")
+}
+
+/// Immutable snapshot of a non-code artifact, created when the student submits it for
+/// evaluation. The working copy (StudentArtifact) keeps changing; evaluations point here.
+model ArtifactRevision {
+  id             String       @id @default(uuid()) @db.Uuid
+  studentId      String       @db.Uuid
+  caseId         String
+  kind           ArtifactKind
+  revisionNumber Int
+  content        Json
+  contentHash    String
+  createdAt      DateTime     @default(now())
+
+  student     Student              @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  evaluations EvaluationArtifact[]
+
+  @@unique([studentId, caseId, kind, revisionNumber])
+  @@unique([studentId, caseId, kind, contentHash])
+  @@map("artifact_revisions")
+}
+
+model StageEvaluation {
+  id               String           @id @default(uuid()) @db.Uuid
+  studentId        String           @db.Uuid
+  caseId           String
+  stage            StageId
+  status           EvaluationStatus @default(PENDING)
+  /// 1 for the first request on this exact submission; incremented by explicit retries.
+  attempt          Int              @default(1)
+  rubricVersion    String
+  promptVersion    String
+  modelName        String?
+  /// Hash of everything evaluated; equal hashes = identical submission.
+  submissionHash   String
+  /// Exact code revision assessed (stages 3 and 4).
+  codeRevisionId   String?          @db.Uuid
+  /// Unverified, browser-reported test outcomes supplied with the submission.
+  clientEvidence   Json?
+  totalScore       Int?
+  maxScore         Int
+  wentWell         Json?
+  needsImprovement Json?
+  feedback         String?
+  uncertainty      Json?
+  failureCategory  String?
+  failureMessage   String?
+  durationMs       Int?
+  createdAt        DateTime         @default(now())
+  completedAt      DateTime?
+
+  student      Student               @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  codeRevision CodeRevision?         @relation(fields: [codeRevisionId], references: [id])
+  criteria     CriterionResult[]
+  artifacts    EvaluationArtifact[]
+  caseLinks    CaseEvaluationStage[]
+
+  @@unique([studentId, caseId, stage, submissionHash, attempt])
+  @@index([studentId, caseId, stage, createdAt])
+  @@map("stage_evaluations")
+}
+
+model CriterionResult {
+  id           String @id @default(uuid()) @db.Uuid
+  evaluationId String @db.Uuid
+  criterionKey String
+  score        Int
+  maxScore     Int
+  evidence     String
+
+  evaluation StageEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+
+  @@unique([evaluationId, criterionKey])
+  @@map("criterion_results")
+}
+
+model EvaluationArtifact {
+  evaluationId       String @db.Uuid
+  artifactRevisionId String @db.Uuid
+
+  evaluation       StageEvaluation  @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  artifactRevision ArtifactRevision @relation(fields: [artifactRevisionId], references: [id])
+
+  @@id([evaluationId, artifactRevisionId])
+  @@map("evaluation_artifacts")
+}
+
+model AssistanceInteraction {
+  id               String           @id @default(uuid()) @db.Uuid
+  studentId        String           @db.Uuid
+  caseId           String
+  stage            StageId
+  /// Idempotency key supplied by the client.
+  requestId        String
+  level            AssistanceLevel
+  policyVersion    String
+  promptVersion    String
+  trigger          String
+  status           AssistanceStatus
+  assistanceType   String
+  content          String
+  modelName        String?
+  failureCategory  String?
+  durationMs       Int?
+  /// Evidence about the student's activity at request time, kept for future policies.
+  activityEvidence Json?
+  createdAt        DateTime         @default(now())
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, requestId])
+  @@index([studentId, caseId, stage, createdAt])
+  @@map("assistance_interactions")
+}
+
+model CaseEvaluation {
+  id            String               @id @default(uuid()) @db.Uuid
+  studentId     String               @db.Uuid
+  caseId        String
+  status        CaseEvaluationStatus
+  policyVersion String
+  /// Hash of the stage evaluations used; the same evidence yields the same record.
+  evidenceHash  String
+  summary       Json
+  createdAt     DateTime             @default(now())
+
+  student   Student               @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  stages    CaseEvaluationStage[]
+  decisions RoutingDecision[]
+
+  @@unique([studentId, caseId, evidenceHash, policyVersion])
+  @@map("case_evaluations")
+}
+
+model CaseEvaluationStage {
+  caseEvaluationId  String @db.Uuid
+  stageEvaluationId String @db.Uuid
+
+  caseEvaluation  CaseEvaluation  @relation(fields: [caseEvaluationId], references: [id], onDelete: Cascade)
+  stageEvaluation StageEvaluation @relation(fields: [stageEvaluationId], references: [id])
+
+  @@id([caseEvaluationId, stageEvaluationId])
+  @@map("case_evaluation_stages")
+}
+
+model RoutingDecision {
+  id               String        @id @default(uuid()) @db.Uuid
+  studentId        String        @db.Uuid
+  currentCaseId    String
+  nextCaseId       String?
+  skippedCaseIds   String[]
+  status           RoutingStatus
+  reason           String
+  policyVersion    String
+  caseEvaluationId String        @db.Uuid
+  createdAt        DateTime      @default(now())
+
+  student        Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  caseEvaluation CaseEvaluation @relation(fields: [caseEvaluationId], references: [id])
+
+  @@unique([caseEvaluationId, policyVersion])
+  @@index([studentId, currentCaseId, createdAt])
+  @@map("routing_decisions")
 }

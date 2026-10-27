@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Assistant } from "./Assistant";
+import { EvaluationPanel, type EvaluationFailure } from "./EvaluationPanel";
 import { StudentGate } from "./AsyncState";
 import { LinkButton, Shell } from "./Shell";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import { FlowchartEditor } from "./FlowchartEditor";
 import { PythonPanel } from "@/features/python-editor/PythonPanel";
 import { TestPanel } from "@/features/python-editor/TestPanel";
 import { useLearning } from "@/features/learning/LearningProvider";
+import { ApiClientError } from "@/lib/api";
 import {
   getCase,
   getCodeDraft,
@@ -22,6 +24,7 @@ import {
 } from "@/lib/mock-data";
 import { containerCls } from "@/lib/ui";
 import { cn } from "@/lib/utils";
+import type { ClientTestResult } from "@skrp/shared";
 import type { Flowchart, ProblemSpec, StageId } from "@/lib/types";
 
 export function Workspace(props: { caseId: string; stageId: string }) {
@@ -54,6 +57,13 @@ function WorkspaceInner({
   const [busy, setBusy] = useState(false);
   // The exact code that last passed every test; the stage unlocks only for that code.
   const [passedSource, setPassedSource] = useState<string | null>(null);
+  // Browser-reported test outcomes for the exact code they ran against (unverified evidence).
+  const [testRun, setTestRun] = useState<{
+    source: string;
+    results: ClientTestResult[];
+  } | null>(null);
+  const [evaluating, setEvaluating] = useState(false);
+  const [evalError, setEvalError] = useState<EvaluationFailure | null>(null);
 
   useEffect(() => {
     const done = completedKey ? completedKey.split(",") : [];
@@ -66,11 +76,15 @@ function WorkspaceInner({
     }
   }, [caseId, completedKey, current, router]);
 
+  useEffect(() => {
+    setEvalError(null);
+  }, [caseId, stageId]);
+
   const go = (id: StageId) => router.push(`/learn/${caseId}/${id}`);
   const nextStage = stages[stages.findIndex((s) => s.id === current) + 1];
   const title = stages.find((s) => s.id === current)?.label ?? "";
 
-  const canContinue =
+  const workReady =
     current === "understand"
       ? Object.values(spec).every(Boolean)
       : current === "design"
@@ -78,6 +92,41 @@ function WorkspaceInner({
         : current === "implement"
           ? Boolean(draft.run)
           : completed.includes("test") || passedSource === draft.source;
+
+  // With the AI backend on, the backend only lets a stage complete after the CURRENT work
+  // was evaluated; the UI mirrors that. In mock mode (no backend) the old rule applies.
+  const evaluation = learning.evaluationFor(caseId, current);
+  const evaluationCurrent = learning.stageSatisfied(caseId, current);
+  const canContinue =
+    workReady &&
+    (!learning.aiEnabled || completed.includes(current) || evaluationCurrent);
+  const testsRunForThisCode =
+    current !== "test" || testRun?.source === draft.source;
+
+  const runEvaluation = async () => {
+    setEvaluating(true);
+    setEvalError(null);
+    setMessage("");
+    try {
+      await learning.evaluateStage(
+        caseId,
+        current,
+        current === "test" && testRun?.source === draft.source
+          ? testRun.results
+          : undefined,
+      );
+    } catch (error) {
+      const api = error instanceof ApiClientError ? error : null;
+      setEvalError({
+        message:
+          api?.message ??
+          (error instanceof Error ? error.message : "Terjadi kesalahan."),
+        retryable: api ? api.isRetryable || api.isAiFailure : false,
+      });
+    } finally {
+      setEvaluating(false);
+    }
+  };
 
   const advance = async () => {
     setBusy(true);
@@ -189,10 +238,20 @@ function WorkspaceInner({
                 <TestPanel
                   tests={item.tests}
                   source={draft.source}
-                  onComplete={(allPassed, source) =>
-                    setPassedSource(allPassed ? source : null)
-                  }
+                  onComplete={(allPassed, source, results) => {
+                    setPassedSource(allPassed ? source : null);
+                    setTestRun({ source, results });
+                  }}
                   onEditCode={() => go("implement")}
+                />
+              )}
+              {learning.aiEnabled && (
+                <EvaluationPanel
+                  evaluation={evaluation}
+                  current={learning.evaluationIsCurrent(caseId, current)}
+                  evaluating={evaluating}
+                  error={evalError}
+                  onRetry={runEvaluation}
                 />
               )}
               <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
@@ -214,7 +273,23 @@ function WorkspaceInner({
                     </button>
                   )}
                 </span>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                  {learning.aiEnabled && (
+                    <Button
+                      variant="secondary"
+                      onClick={runEvaluation}
+                      disabled={
+                        evaluating || busy || !workReady || !testsRunForThisCode
+                      }
+                      title={
+                        !testsRunForThisCode
+                          ? "Jalankan semua tes untuk kode ini dulu"
+                          : undefined
+                      }
+                    >
+                      {evaluating ? "Memeriksa…" : "Periksa jawaban"}
+                    </Button>
+                  )}
                   <Button variant="outline" onClick={saveDraft} disabled={busy}>
                     {completed.includes(current)
                       ? "Simpan perubahan"
@@ -230,7 +305,7 @@ function WorkspaceInner({
             </CardContent>
           </Card>
           <div className="space-y-4">
-            <Assistant stage={title} />
+            <Assistant caseId={caseId} stageId={current} stage={title} />
             <Card>
               <CardContent>
                 <Badge variant="secondary">Tujuan misi</Badge>
@@ -244,7 +319,9 @@ function WorkspaceInner({
                   ))}
                 </ul>
                 <p className="mt-3 text-xs leading-5 text-muted-foreground">
-                  Tahap ditandai selesai setelah hasil kerjanya terisi
+                  {learning.aiEnabled
+                    ? "Tahap berikutnya terbuka setelah pekerjaanmu diperiksa (tombol “Periksa jawaban”)."
+                    : "Tahap ditandai selesai setelah hasil kerjanya terisi"}
                 </p>
               </CardContent>
             </Card>

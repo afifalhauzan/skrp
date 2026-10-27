@@ -156,3 +156,45 @@ export const saveCodeRevisionBody = z
   .strict();
 
 export type SaveCodeRevisionBody = z.infer<typeof saveCodeRevisionBody>;
+
+// ---- AI evaluation / assistance ---------------------------------------------
+
+export const evaluationIdParam = z.string().uuid();
+
+export const submitStageEvaluationBody = z
+  .object({
+    caseId: caseIdParam,
+    stage: stageIdSchema,
+    codeRevision: z.number().int().min(1).optional(),
+    testResults: z
+      .array(
+        z
+          .object({
+            testId: z.string().min(1).max(40),
+            passed: z.boolean(),
+            actual: z.string().max(500).optional(),
+          })
+          .strict(),
+      )
+      .max(20)
+      .optional(),
+  })
+  .strict();
+
+export const hintRequestBody = z
+  .object({
+    caseId: caseIdParam,
+    stage: stageIdSchema,
+    requestId: z.string().uuid(),
+  })
+  .strict();
+
+export const stageQuery = z.object({
+  caseId: caseIdParam,
+  stage: stageIdSchema,
+});
+export const stageListQuery = z.object({
+  caseId: caseIdParam,
+  stage: stageIdSchema.optional(),
+});
+export const caseEvaluationBody = z.object({ caseId: caseIdParam }).strict();

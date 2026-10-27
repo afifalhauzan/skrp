@@ -48,7 +48,13 @@ describe.skipIf(!url)("API with PostgreSQL", () => {
       ADMIN_API_KEY: ADMIN,
     });
     prisma = new PrismaClient({ datasources: { db: { url: url! } } });
-    app = createApp({ config, logger: createLogger(config), prisma });
+    app = createApp({
+      config,
+      logger: createLogger(config),
+      prisma,
+      // These tests exercise the existing endpoints; AI-gated progress has its own suite.
+      requireEvaluationForProgress: false,
+    });
   });
   afterAll(async () => {
     await prisma.$disconnect();

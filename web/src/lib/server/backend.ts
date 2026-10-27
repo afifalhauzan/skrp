@@ -19,7 +19,22 @@ const ARTIFACT_KINDS = new Set([
   "reflection",
 ]);
 
-export const patterns = { STUDENT_CODE, CASE_ID };
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const AI_CODES = new Set([
+  "AI_NOT_CONFIGURED",
+  "AI_TIMEOUT",
+  "AI_RATE_LIMITED",
+  "AI_UNAVAILABLE",
+  "AI_INVALID_RESPONSE",
+]);
+const STAGES = new Set(["understand", "design", "implement", "test"]);
+
+/** AI calls (Gemini + retries) can take ~45 s; Vercel needs `maxDuration` >= this. */
+export const AI_TIMEOUT_MS = 65_000;
+
+export const patterns = { STUDENT_CODE, CASE_ID, UUID };
+export const isStage = (value: string | null): value is string =>
+  value !== null && STAGES.has(value);
 
 export function isArtifactKind(value: string) {
   return ARTIFACT_KINDS.has(value);
@@ -55,6 +70,10 @@ interface ForwardOptions {
   /** Fixed path built by a route handler from validated segments, e.g. `/api/students/PY001`. */
   path: string;
   request: Request;
+  /** Defaults to 10 s; AI routes pass a longer one (the model call can take a while). */
+  timeoutMs?: number;
+  /** Already-validated query parameters to append. */
+  query?: Record<string, string>;
 }
 
 /**
@@ -66,6 +85,8 @@ export async function forward({
   method,
   path,
   request,
+  timeoutMs = TIMEOUT_MS,
+  query,
 }: ForwardOptions): Promise<NextResponse> {
   const requestId = request.headers.get("x-request-id") ?? randomUUID();
 
@@ -93,12 +114,13 @@ export async function forward({
   // Abort on either the browser disconnecting or our own timeout.
   const signal = AbortSignal.any([
     request.signal,
-    AbortSignal.timeout(TIMEOUT_MS),
+    AbortSignal.timeout(timeoutMs),
   ]);
 
   let upstream: Response;
   try {
-    upstream = await fetch(`${backendOrigin()}${path}`, {
+    const qs = query ? `?${new URLSearchParams(query).toString()}` : "";
+    upstream = await fetch(`${backendOrigin()}${path}${qs}`, {
       method,
       headers,
       body,
@@ -147,6 +169,40 @@ export async function forward({
       "The server is unavailable",
       requestId,
     );
+  }
+
+  // Our own AI errors carry a fixed, client-safe message and a code; pass those through so
+  // the UI can offer the right retry. Anything else 5xx stays generic.
+  const aiError = (
+    payload as {
+      error?: {
+        code?: string;
+        message?: string;
+        meta?: { evaluationId?: string };
+      };
+    } | null
+  )?.error;
+  if (
+    upstream.status >= 500 &&
+    typeof aiError?.code === "string" &&
+    AI_CODES.has(aiError.code) &&
+    typeof aiError.message === "string"
+  ) {
+    const evaluationId = aiError.meta?.evaluationId;
+    const body: ApiErrorBody = {
+      error: {
+        code: aiError.code as ApiErrorCode,
+        message: aiError.message.slice(0, 200),
+        requestId,
+        ...(evaluationId && UUID.test(evaluationId)
+          ? { meta: { evaluationId } }
+          : {}),
+      },
+    };
+    return NextResponse.json(body, {
+      status: upstream.status,
+      headers: { "cache-control": "no-store" },
+    });
   }
 
   if (upstream.status >= 500 || (upstream.ok && payload === null)) {
