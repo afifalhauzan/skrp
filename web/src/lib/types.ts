@@ -1,6 +1,13 @@
 // Domain contracts (StageId, ProblemSpec, progress, artifacts...) live in @skrp/shared.
 // This file holds only UI/content types for the case catalogue.
-export type { StageId, ProblemSpec } from "@skrp/shared";
+export type {
+  StageId,
+  ProblemSpec,
+  Flowchart,
+  FlowNode,
+  FlowNodeKind,
+  FlowEdge,
+} from "@skrp/shared";
 
 export type SupportLevel = "HIGH" | "MODERATE" | "LOW";
 export interface TestCase {

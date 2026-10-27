@@ -270,6 +270,20 @@ describe.skipIf(!url)("API with PostgreSQL", () => {
         .put("/api/students/PY001/cases/journey/artifacts/reflection")
         .send({ content: "x" });
       expect(reflection.status).toBe(200);
+
+      const flowchart = JSON.stringify({ nodes: [], edges: [] });
+      const savedFlowchart = await api()
+        .put("/api/students/PY001/cases/case-1/artifacts/flowchart")
+        .send({ content: flowchart });
+      expect(savedFlowchart.status).toBe(200);
+      expect(savedFlowchart.body.data).toMatchObject({
+        kind: "FLOWCHART",
+        content: flowchart,
+      });
+      const flowchartAsObject = await api()
+        .put("/api/students/PY001/cases/case-1/artifacts/flowchart")
+        .send({ content: { nodes: [], edges: [] } });
+      expect(flowchartAsObject.status).toBe(400);
     });
 
     describe("code revisions", () => {

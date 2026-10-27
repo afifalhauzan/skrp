@@ -73,7 +73,35 @@ export interface UpdateStudentInput {
 
 export type StageId = "understand" | "design" | "implement" | "test";
 export type CaseStatus = "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
-export type ArtifactKind = "PROBLEM_SPEC" | "PSEUDOCODE" | "REFLECTION";
+export type ArtifactKind =
+  | "PROBLEM_SPEC"
+  | "PSEUDOCODE"
+  | "FLOWCHART"
+  | "REFLECTION";
+
+export type FlowNodeKind = "start" | "end" | "process" | "io" | "decision";
+export interface FlowNode {
+  id: string;
+  kind: FlowNodeKind;
+  label: string;
+  x: number;
+  y: number;
+  /** "ai" = draft supplied by BE/AI; becomes "student" once the student edits it. */
+  origin: "ai" | "student";
+}
+export interface FlowEdge {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string;
+  targetHandle?: string;
+  label?: string;
+}
+/** A student's flowchart. Stored as a JSON string in the FLOWCHART artifact's `content`. */
+export interface Flowchart {
+  nodes: FlowNode[];
+  edges: FlowEdge[];
+}
 
 export interface ProblemSpec {
   goal: string;
@@ -99,7 +127,7 @@ export interface SaveCaseProgressInput {
   completedStages: StageId[];
 }
 
-/** Saved work other than code. `content` is a ProblemSpec or a plain string by kind. */
+/** Saved work other than code. `content` is a ProblemSpec or a plain string by kind (FLOWCHART: JSON-encoded Flowchart). */
 export interface Artifact {
   caseId: string;
   kind: ArtifactKind;

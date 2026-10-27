@@ -12,7 +12,12 @@ const MAX_BODY_BYTES = 256 * 1024;
 
 const STUDENT_CODE = /^(PY\d{3,}|VALIDATOR\d{3})$/i;
 const CASE_ID = /^[a-z0-9][a-z0-9-]{0,39}$/;
-const ARTIFACT_KINDS = new Set(["problem-spec", "pseudocode", "reflection"]);
+const ARTIFACT_KINDS = new Set([
+  "problem-spec",
+  "pseudocode",
+  "flowchart",
+  "reflection",
+]);
 
 export const patterns = { STUDENT_CODE, CASE_ID };
 

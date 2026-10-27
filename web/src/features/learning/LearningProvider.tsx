@@ -12,6 +12,7 @@ import {
 import type {
   CaseProgress,
   ExecutionMetadata,
+  Flowchart,
   ProblemSpec,
   ProgressSnapshot,
   StageId,
@@ -23,7 +24,7 @@ import {
   resetMockData,
   type ApiClient,
 } from "@/lib/api";
-import { blankSpec, defaultCode } from "@/lib/mock-data";
+import { blankSpec, getCodeDraft, getStdinDraft } from "@/lib/mock-data";
 import { splitStdin } from "../python-editor/engine";
 import {
   isResultCurrent,
@@ -53,6 +54,7 @@ interface Store {
   cases: Record<string, CaseProgress>;
   specs: Record<string, ProblemSpec>;
   pseudocode: Record<string, string>;
+  flowcharts: Record<string, Flowchart>;
   code: Record<string, CodeDraft>;
   reflection: string;
 }
@@ -61,6 +63,7 @@ const emptyStore = (): Store => ({
   cases: {},
   specs: {},
   pseudocode: {},
+  flowcharts: {},
   code: {},
   reflection: "",
 });
@@ -80,6 +83,18 @@ function restoreRun(
   };
 }
 
+/** FLOWCHART artifacts are JSON strings; ignore anything that is not a graph. */
+function parseFlowchart(content: string): Flowchart | null {
+  try {
+    const parsed = JSON.parse(content) as Partial<Flowchart> | null;
+    return parsed && Array.isArray(parsed.nodes) && Array.isArray(parsed.edges)
+      ? (parsed as Flowchart)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 function fromSnapshot(snapshot: ProgressSnapshot): Store {
   const store = emptyStore();
   for (const c of snapshot.cases) store.cases[c.caseId] = c;
@@ -88,7 +103,10 @@ function fromSnapshot(snapshot: ProgressSnapshot): Store {
       store.specs[a.caseId] = a.content;
     else if (a.kind === "PSEUDOCODE" && typeof a.content === "string")
       store.pseudocode[a.caseId] = a.content;
-    else if (a.kind === "REFLECTION" && typeof a.content === "string")
+    else if (a.kind === "FLOWCHART" && typeof a.content === "string") {
+      const flowchart = parseFlowchart(a.content);
+      if (flowchart) store.flowcharts[a.caseId] = flowchart;
+    } else if (a.kind === "REFLECTION" && typeof a.content === "string")
       store.reflection = a.content;
   }
   for (const r of snapshot.latestCode) {
@@ -119,11 +137,14 @@ interface LearningContextValue {
   progressFor(caseId: string): CaseProgress | undefined;
   specFor(caseId: string): ProblemSpec;
   pseudocodeFor(caseId: string): string;
+  /** The student's flowchart, or undefined until they (or a BE/AI draft) saved one. */
+  flowchartFor(caseId: string): Flowchart | undefined;
   codeFor(caseId: string): CodeDraft;
   reflection: string;
 
   setSpec(caseId: string, spec: ProblemSpec): void;
   setPseudocode(caseId: string, value: string): void;
+  setFlowchart(caseId: string, value: Flowchart): void;
   setCode(
     caseId: string,
     patch: Partial<Pick<CodeDraft, "source" | "stdin">>,
@@ -354,7 +375,11 @@ export function LearningProvider({ children }: { children: ReactNode }) {
   );
 
   const draftOf = (s: Store, caseId: string): CodeDraft =>
-    s.code[caseId] ?? { source: defaultCode, stdin: "", revision: null };
+    s.code[caseId] ?? {
+      source: getCodeDraft(caseId),
+      stdin: getStdinDraft(caseId),
+      revision: null,
+    };
 
   const value: LearningContextValue = {
     mode: api.mode,
@@ -369,6 +394,7 @@ export function LearningProvider({ children }: { children: ReactNode }) {
     progressFor: (caseId) => store.cases[caseId],
     specFor: (caseId) => store.specs[caseId] ?? blankSpec,
     pseudocodeFor: (caseId) => store.pseudocode[caseId] ?? "",
+    flowchartFor: (caseId) => store.flowcharts[caseId],
     codeFor: (caseId) => draftOf(store, caseId),
     reflection: store.reflection,
 
@@ -388,6 +414,19 @@ export function LearningProvider({ children }: { children: ReactNode }) {
       schedule(`pseudo:${caseId}`, () =>
         api.saveArtifact(codeRef.current!, caseId, "PSEUDOCODE", {
           content: storeRef.current.pseudocode[caseId] ?? text,
+        }),
+      );
+    },
+    setFlowchart(caseId, flowchart) {
+      setStore((s) => ({
+        ...s,
+        flowcharts: { ...s.flowcharts, [caseId]: flowchart },
+      }));
+      schedule(`flow:${caseId}`, () =>
+        api.saveArtifact(codeRef.current!, caseId, "FLOWCHART", {
+          content: JSON.stringify(
+            storeRef.current.flowcharts[caseId] ?? flowchart,
+          ),
         }),
       );
     },

@@ -15,6 +15,8 @@ import {
 
 interface Props {
   source: string;
+  /** Starter code (e.g. a BE/AI draft); enables "Reset ke draf" once the student's code differs. */
+  draftSource?: string;
   stdin: string;
   result: ExecutionResult | undefined;
   onSourceChange: (value: string) => void;
@@ -33,6 +35,7 @@ const STATUS_LABEL: Record<ExecutionResult["status"], string> = {
 
 export function PythonPanel({
   source,
+  draftSource,
   stdin,
   result,
   onSourceChange,
@@ -63,7 +66,26 @@ export function PythonPanel({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Editor Python</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label>Editor Python</Label>
+          {draftSource !== undefined && source !== draftSource && (
+            <Button
+              variant="link"
+              size="sm"
+              disabled={running}
+              onClick={() => {
+                if (
+                  confirm(
+                    "Kembalikan kode ke draf awal? Perubahanmu akan hilang.",
+                  )
+                )
+                  onSourceChange(draftSource);
+              }}
+            >
+              Reset ke draf
+            </Button>
+          )}
+        </div>
         <CodeEditor value={source} onChange={onSourceChange} />
       </div>
 

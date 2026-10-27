@@ -32,6 +32,7 @@ export const stageIdSchema = z.enum([
 export const artifactKindSchema = z.enum([
   "PROBLEM_SPEC",
   "PSEUDOCODE",
+  "FLOWCHART",
   "REFLECTION",
 ]);
 

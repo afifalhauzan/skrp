@@ -56,7 +56,7 @@ API integration tests need a throwaway database: `TEST_DATABASE_URL=postgresql:/
 | `LOG_LEVEL`, `TRUST_PROXY` | api | Pino level; number of reverse proxies in front. |
 | `NEXT_PUBLIC_API_MODE` | web | `mock` or `live`. Unset: `mock` in dev, `live` in production builds. Build-time. |
 | `API_INTERNAL_URL` | web (server only) | Origin of the Express API used by the BFF. |
-| `NEXT_PUBLIC_PYODIDE_INDEX_URL` | web | Optional self-hosted Pyodide path; default is the jsDelivr CDN. |
+| `NEXT_PUBLIC_PYODIDE_INDEX_URL` | web | Optional Pyodide runtime URL. Default is the self-hosted copy at `/pyodide/` (copied from `node_modules` into `web/public/pyodide` by `predev`/`prebuild`); set it to e.g. the jsDelivr CDN to override. |
 
 `NEXT_PUBLIC_API_BASE_URL` is intentionally absent: browsers only call same-origin `/api/*` on the Next.js app, so the API origin and key never reach client bundles. Root `.env.example` is for Docker Compose; see also `api/.env.example` and `web/.env.example`.
 

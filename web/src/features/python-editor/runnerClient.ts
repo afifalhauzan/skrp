@@ -3,7 +3,8 @@ import type { ExecutionResult, PythonRunner, RunRequest } from "./types";
 
 /** Pin must match the `pyodide` devDependency used by the tests. */
 export const PYODIDE_VERSION = "0.27.7";
-const DEFAULT_INDEX_URL = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`;
+/** Self-hosted under public/pyodide (see scripts/copy-pyodide.mjs); override for a CDN. */
+const DEFAULT_INDEX_URL = "/pyodide/";
 
 export const DEFAULT_TIMEOUT_MS = 10_000;
 const LOAD_TIMEOUT_MS = 90_000;

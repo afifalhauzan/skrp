@@ -10,12 +10,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ProgressBar } from "./ProgressBar";
+import { FlowchartEditor } from "./FlowchartEditor";
 import { PythonPanel } from "@/features/python-editor/PythonPanel";
 import { useLearning } from "@/features/learning/LearningProvider";
-import { getCase, stages } from "@/lib/mock-data";
+import {
+  getCase,
+  getCodeDraft,
+  getFlowchartDraft,
+  stages,
+} from "@/lib/mock-data";
 import { containerCls } from "@/lib/ui";
 import { cn } from "@/lib/utils";
-import type { ProblemSpec, StageId } from "@/lib/types";
+import type { Flowchart, ProblemSpec, StageId } from "@/lib/types";
 
 export function Workspace(props: { caseId: string; stageId: string }) {
   return (
@@ -154,13 +160,19 @@ function WorkspaceInner({
               )}
               {current === "design" && (
                 <Design
+                  caseId={caseId}
                   value={pseudocode}
+                  flowchart={learning.flowchartFor(caseId)}
                   onChange={(value) => learning.setPseudocode(caseId, value)}
+                  onFlowchartChange={(value) =>
+                    learning.setFlowchart(caseId, value)
+                  }
                 />
               )}
               {current === "implement" && (
                 <PythonPanel
                   source={draft.source}
+                  draftSource={getCodeDraft(caseId)}
                   stdin={draft.stdin}
                   result={draft.run}
                   saveStatus={saveStatus}
@@ -265,18 +277,30 @@ function Understand({
 }
 
 function Design({
+  caseId,
   value,
+  flowchart,
   onChange,
+  onFlowchartChange,
 }: {
+  caseId: string;
   value: string;
+  flowchart?: Flowchart;
   onChange: (value: string) => void;
+  onFlowchartChange: (value: Flowchart) => void;
 }) {
   return (
     <div className="space-y-5">
       <p className="rounded-xl bg-muted p-3 text-sm leading-6 text-muted-foreground">
-        Susun algoritma dalam langkah-langkah singkat. Flowchart visual belum
-        tersedia di versi ini; tulis rancanganmu sebagai pseudocode.
+        Susun algoritma dalam langkah-langkah singkat, lalu gambarkan sebagai
+        flowchart.
       </p>
+      <FlowchartEditor
+        key={caseId}
+        value={flowchart}
+        draft={getFlowchartDraft(caseId)}
+        onChange={onFlowchartChange}
+      />
       <div className="space-y-2">
         <Label htmlFor="pseudocode">Pseudocode</Label>
         <Textarea
