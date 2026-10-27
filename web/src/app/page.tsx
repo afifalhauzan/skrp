@@ -36,22 +36,18 @@ export default function Home() {
           <CardContent className="grid gap-8 p-5 sm:p-10 lg:grid-cols-[1.3fr_1fr] lg:items-center">
             <div>
               <Badge variant="secondary">
-                Media pembelajaran Python · Kelas XII SMA
+                Media pembelajaran Python berbasis Scaffolding · Kelas XII SMA
               </Badge>
               <h1 className="mt-4 font-heading text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
                 Kuasai Python melalui pemecahan masalah terstruktur
               </h1>
               <p className="mt-4 text-base leading-7 text-muted-foreground">
-                Siswa dibimbing bertahap: memahami masalah nyata, merancang
-                algoritma, menulis kode Python, lalu menguji dan memperbaikinya.
-                Bantuan berkurang seiring siswa makin mandiri.
+                Dari memahami masalah sampai kode berhasil dijalankan, kamu bakal belajar langkah demi langkah. 
+                Ada teman belajar yang siap kasih petunjuk saat kamu butuh. Makin lama, kamu makin jago menyelesaikannya sendiri!
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <LinkButton href="/login" size="lg">
                   Mulai belajar <ArrowRight />
-                </LinkButton>
-                <LinkButton href="/login" size="lg" variant="outline">
-                  Masuk dengan kode akses
                 </LinkButton>
               </div>
             </div>

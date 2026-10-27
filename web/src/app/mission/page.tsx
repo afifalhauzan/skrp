@@ -47,7 +47,7 @@ function MissionBriefing() {
             </span>
           </Badge>
           <Badge variant="outline">
-            <Clock /> 45 menit
+            <Clock /> 15 menit
           </Badge>
         </div>
         <div>

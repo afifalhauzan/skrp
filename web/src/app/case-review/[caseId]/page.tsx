@@ -103,7 +103,7 @@ function CaseReviewContent({ caseId }: { caseId: string }) {
         )}
         {!complete && (
           <LinkButton href={`/learn/${caseId}/understand`}>
-            Kembali ke workspace
+            Kembali ke Kasus {item.number} <ArrowRight />
           </LinkButton>
         )}
       </main>
