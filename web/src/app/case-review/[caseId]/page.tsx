@@ -1,8 +1,19 @@
 "use client";
+import { ArrowRight, Check } from "lucide-react";
 import { StudentGate } from "@/components/AsyncState";
-import { Button, Card, Shell } from "@/components/Shell";
+import { LinkButton, Shell } from "@/components/Shell";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { useLearning } from "@/features/learning/LearningProvider";
 import { getCase, stages } from "@/lib/mock-data";
+import { containerCls } from "@/lib/ui";
+import { cn } from "@/lib/utils";
+
 export default function CaseReview({ params }: { params: { caseId: string } }) {
   return (
     <StudentGate>
@@ -10,80 +21,90 @@ export default function CaseReview({ params }: { params: { caseId: string } }) {
     </StudentGate>
   );
 }
+
 function CaseReviewContent({ caseId }: { caseId: string }) {
-  const params = { caseId };
   const { progressFor } = useLearning();
   const done: string[] = progressFor(caseId)?.completedStages ?? [];
-  const item = getCase(params.caseId);
+  const item = getCase(caseId);
   const complete = done.length === stages.length;
+  const percent = Math.round((done.length / stages.length) * 100);
   const next =
-    params.caseId === "case-1"
-      ? "case-2"
-      : params.caseId === "case-2"
-        ? "case-3"
-        : null;
+    caseId === "case-1" ? "case-2" : caseId === "case-2" ? "case-3" : null;
   return (
     <Shell>
-      <main className="mx-auto max-w-5xl px-6 py-12">
-        <p className="text-sm font-bold text-teal">Evaluasi tingkat kasus</p>
-        <h1 className="mt-3 text-4xl font-bold text-navy">
+      <main className={cn(containerCls, "space-y-4 pb-12 pt-6 sm:pt-10")}>
+        <p className="text-sm font-medium text-primary">Evaluasi kasus</p>
+        <h1 className="font-heading text-3xl font-bold sm:text-4xl">
           {complete ? "Misi selesai!" : "Sedikit lagi"}
         </h1>
-        <p className="mt-3 max-w-2xl text-muted">
+        <p className="max-w-2xl text-muted-foreground">
           {complete
-            ? "Semua artefak untuk kasus ini sudah tersimpan. Berikutnya adalah keputusan routing mock."
+            ? "Semua hasil kerja untuk kasus ini sudah tersimpan."
             : "Selesaikan setiap tahap untuk melihat evaluasi kasus."}
         </p>
-        <Card className="mt-8">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-bold text-navy">
-                Kasus {item.number} · {item.title}
-              </p>
-              <p className="mt-1 text-sm text-muted">
-                {done.length} dari {stages.length} tahap selesai
-              </p>
-            </div>
-            <div className="text-4xl font-bold text-teal">
-              {Math.round((done.length / stages.length) * 100)}%
-            </div>
-          </div>
-          <div className="mt-6 grid gap-3 md:grid-cols-4">
-            {stages.map((stage) => (
-              <div
-                key={stage.id}
-                className={`rounded-xl p-4 text-sm font-bold ${done.includes(stage.id) ? "bg-mint text-teal" : "bg-[#f3f6f4] text-muted"}`}
-              >
-                {done.includes(stage.id) ? "✓ " : ""}
-                {stage.label}
+        <Card>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <CardTitle>
+                  Kasus {item.number} · {item.title}
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  {done.length} dari {stages.length} tahap selesai
+                </CardDescription>
               </div>
-            ))}
-          </div>
+              <div className="font-heading text-3xl font-bold text-primary">
+                {percent}%
+              </div>
+            </div>
+            <Progress value={percent} />
+            <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-4">
+              {stages.map((stage) => (
+                <div
+                  key={stage.id}
+                  className={cn(
+                    "flex items-center gap-2 rounded-lg p-3 text-sm font-medium",
+                    done.includes(stage.id)
+                      ? "bg-primary/10 text-primary"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {done.includes(stage.id) && <Check className="size-4" />}
+                  {stage.label}
+                </div>
+              ))}
+            </div>
+          </CardContent>
         </Card>
         {complete && (
-          <Card className="mt-5 border-teal/20 bg-[#f2faf6]">
-            <p className="text-xs font-bold uppercase tracking-widest text-teal">
-              Routing mock
-            </p>
-            <h2 className="mt-2 text-xl font-bold text-navy">
-              {next
-                ? `Lanjut ke Kasus ${next.slice(-1)}`
-                : "Kamu mencapai akhir pembelajaran"}
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-muted">
-              {next
-                ? "Prototype fixture mengarahkan kasus ini ke misi berikutnya. Keputusan ini bukan ambang pedagogis final."
-                : "Semua kasus utama telah diselesaikan."}
-            </p>
-            <Button href={next ? `/learn/${next}/understand` : "/final-review"}>
-              {next ? "Lanjutkan misi →" : "Lihat evaluasi akhir →"}
-            </Button>
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                Langkah berikutnya
+              </p>
+              <h2 className="font-heading text-xl font-semibold">
+                {next
+                  ? `Lanjut ke Kasus ${next.slice(-1)}`
+                  : "Kamu mencapai akhir pembelajaran"}
+              </h2>
+              <p className="text-sm leading-6 text-muted-foreground">
+                {next
+                  ? "Kamu siap melanjutkan ke misi berikutnya."
+                  : "Semua kasus utama telah diselesaikan."}
+              </p>
+              <LinkButton
+                href={next ? `/learn/${next}/understand` : "/final-review"}
+              >
+                {next ? "Lanjutkan misi" : "Lihat evaluasi akhir"}{" "}
+                <ArrowRight />
+              </LinkButton>
+            </CardContent>
           </Card>
         )}
         {!complete && (
-          <Button href={`/learn/${params.caseId}/understand`}>
+          <LinkButton href={`/learn/${caseId}/understand`}>
             Kembali ke workspace
-          </Button>
+          </LinkButton>
         )}
       </main>
     </Shell>

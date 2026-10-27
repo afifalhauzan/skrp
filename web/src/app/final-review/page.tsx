@@ -1,10 +1,20 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check } from "lucide-react";
 import { StudentGate } from "@/components/AsyncState";
-import { Button, Card, Shell } from "@/components/Shell";
+import { Shell } from "@/components/Shell";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useLearning } from "@/features/learning/LearningProvider";
 import { cases } from "@/lib/mock-data";
+import { containerCls } from "@/lib/ui";
+import { cn } from "@/lib/utils";
+
 export default function FinalReview() {
   return (
     <StudentGate>
@@ -12,6 +22,7 @@ export default function FinalReview() {
     </StudentGate>
   );
 }
+
 function FinalReviewContent() {
   const router = useRouter();
   const learning = useLearning();
@@ -34,67 +45,76 @@ function FinalReviewContent() {
   };
   return (
     <Shell>
-      <main className="mx-auto max-w-5xl px-6 py-12">
-        <p className="text-sm font-bold text-teal">Perjalanan selesai</p>
-        <h1 className="mt-3 text-4xl font-bold text-navy md:text-5xl">
+      <main className={cn(containerCls, "pb-12 pt-6 sm:pt-10")}>
+        <p className="text-sm font-medium text-primary">Perjalanan selesai</p>
+        <h1 className="mt-2 font-heading text-3xl font-bold sm:text-4xl">
           Kamu sudah membangun solusi dari awal.
         </h1>
-        <p className="mt-4 max-w-2xl text-lg leading-8 text-muted">
+        <p className="mt-3 max-w-2xl text-muted-foreground">
           Gunakan ringkasan ini untuk melihat prosesmu, bukan hanya jawaban
           akhirnya.
         </p>
-        <div className="mt-9 grid gap-5 md:grid-cols-3">
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
           {cases.map((item) => (
             <Card key={item.id}>
-              <p className="text-xs font-bold uppercase tracking-widest text-teal">
-                Kasus {item.number}
-              </p>
-              <h2 className="mt-2 font-bold text-navy">{item.title}</h2>
-              <p className="mt-4 text-sm text-muted">
+              <CardHeader>
+                <Badge variant="secondary" className="w-fit">
+                  Kasus {item.number}
+                </Badge>
+                <CardTitle className="mt-2">{item.title}</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
                 4 tahap selesai · dukungan {item.support}
-              </p>
+              </CardContent>
             </Card>
           ))}
         </div>
-        <div className="mt-6 grid gap-5 md:grid-cols-2">
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
           <Card>
-            <p className="text-xs font-bold uppercase tracking-widest text-teal">
-              Yang sudah dikuasai
-            </p>
-            <ul className="mt-4 space-y-3 text-sm leading-6 text-navy">
-              <li>✓ Menguraikan masalah sebelum membuat kode</li>
-              <li>✓ Menghubungkan algoritma dengan implementasi</li>
-              <li>✓ Membaca bukti dari hasil pengujian</li>
-            </ul>
+            <CardHeader>
+              <CardTitle>Yang sudah dikuasai</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3 text-sm leading-6">
+                {[
+                  "Menguraikan masalah sebelum membuat kode",
+                  "Menghubungkan algoritma dengan implementasi",
+                  "Membaca bukti dari hasil pengujian",
+                ].map((t) => (
+                  <li key={t} className="flex gap-2">
+                    <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
           </Card>
           <Card>
-            <p className="text-xs font-bold uppercase tracking-widest text-teal">
-              Refleksi singkat
-            </p>
-            <label
-              htmlFor="reflection"
-              className="mt-4 block text-sm font-bold text-navy"
-            >
-              Apa satu hal yang ingin kamu latih lagi?
-            </label>
-            <textarea
-              id="reflection"
-              value={reflection}
-              onChange={(e) => {
-                setReflection(e.target.value);
-                setSaved(false);
-              }}
-              rows={4}
-              className="mt-2 w-full rounded-xl border border-[#d8e4dd] p-3 text-sm outline-none focus:border-teal"
-            />
-            {error && (
-              <p role="alert" className="mt-2 text-sm font-bold text-coral">
-                {error}
-              </p>
-            )}
-            <Button onClick={save}>
-              {saved ? "Tersimpan ✓" : "Simpan refleksi"}
-            </Button>
+            <CardHeader>
+              <CardTitle>Refleksi singkat</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Label htmlFor="reflection">
+                Apa satu hal yang ingin kamu latih lagi?
+              </Label>
+              <Textarea
+                id="reflection"
+                value={reflection}
+                onChange={(e) => {
+                  setReflection(e.target.value);
+                  setSaved(false);
+                }}
+                rows={4}
+              />
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription role="alert">{error}</AlertDescription>
+                </Alert>
+              )}
+              <Button onClick={save}>
+                {saved ? "Tersimpan ✓" : "Simpan refleksi"}
+              </Button>
+            </CardContent>
           </Card>
         </div>
         <div className="mt-8 flex justify-end">
