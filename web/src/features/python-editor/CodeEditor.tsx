@@ -31,7 +31,7 @@ const surface = EditorView.theme(
       overflow: "auto",
       borderRadius: "12px",
     },
-    "&.cm-focused": { outline: "2px solid #2C9B83" },
+    "&.cm-focused": { outline: "2px solid var(--ring)" },
   },
   { dark: true },
 );
