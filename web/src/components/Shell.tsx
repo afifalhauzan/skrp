@@ -54,10 +54,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
               title={
                 mode === "mock"
                   ? "Mode mock: data hanya tersimpan di browser ini, bukan di server."
-                  : "Mode live: data tersimpan melalui API."
+                  : ""
               }
             >
-              {mode === "mock" ? "Mode mock (lokal)" : "Mode live API"}
+              {mode === "mock" ? "Mode mock (lokal)" : ""}
             </span>
           </div>
         </div>
