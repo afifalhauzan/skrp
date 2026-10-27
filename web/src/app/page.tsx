@@ -1,6 +1,7 @@
 import { containerCls } from "@/lib/ui";
 import { ArrowRight } from "lucide-react";
 import { LinkButton, Shell } from "@/components/Shell";
+import { Mascot } from "@/components/Mascot";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -54,19 +55,11 @@ export default function Home() {
                 </LinkButton>
               </div>
             </div>
-            <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-              {stages.map(([n, title]) => (
-                <li
-                  key={n}
-                  className="flex items-center gap-3 rounded-xl bg-muted p-3"
-                >
-                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                    {n}
-                  </span>
-                  <span className="text-sm font-medium">{title}</span>
-                </li>
-              ))}
-            </ol>
+            <Mascot
+              variant="fullbody"
+              alt="Maskot PyScaffold sedang menulis kode"
+              className="mx-auto w-48 sm:w-56 lg:w-64"
+            />
           </CardContent>
         </Card>
         <h2 className="mt-10 font-heading text-xl font-semibold">

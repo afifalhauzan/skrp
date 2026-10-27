@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Mascot } from "./Mascot";
 
 export function Assistant({ stage }: { stage: string }) {
   const [state, setState] = useState<"idle" | "loading" | "shown" | "error">(
@@ -15,9 +15,15 @@ export function Assistant({ stage }: { stage: string }) {
   return (
     <Card className="border-primary/30 bg-primary/5">
       <CardContent className="flex items-start gap-3">
-        <div className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
-          <Sparkles className="size-4" />
-        </div>
+        <Mascot
+          variant={state === "loading" ? "thinking" : "standby"}
+          alt={
+            state === "loading"
+              ? "Maskot sedang berpikir"
+              : "Maskot siap membantu"
+          }
+          className="w-16 shrink-0"
+        />
         <div className="flex-1 space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-primary">
             Teman belajar

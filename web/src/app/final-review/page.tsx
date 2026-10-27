@@ -5,6 +5,7 @@ import { Check } from "lucide-react";
 import { StudentGate } from "@/components/AsyncState";
 import { Shell } from "@/components/Shell";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Mascot } from "@/components/Mascot";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,14 +47,25 @@ function FinalReviewContent() {
   return (
     <Shell>
       <main className={cn(containerCls, "pb-12 pt-6 sm:pt-10")}>
-        <p className="text-sm font-medium text-primary">Perjalanan selesai</p>
-        <h1 className="mt-2 font-heading text-3xl font-bold sm:text-4xl">
-          Kamu sudah membangun solusi dari awal.
-        </h1>
-        <p className="mt-3 max-w-2xl text-muted-foreground">
-          Gunakan ringkasan ini untuk melihat prosesmu, bukan hanya jawaban
-          akhirnya.
-        </p>
+        <div className="flex flex-col-reverse items-center gap-6 sm:flex-row sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-primary">
+              Perjalanan selesai
+            </p>
+            <h1 className="mt-2 font-heading text-3xl font-bold sm:text-4xl">
+              Kamu sudah membangun solusi dari awal.
+            </h1>
+            <p className="mt-3 max-w-2xl text-muted-foreground">
+              Gunakan ringkasan ini untuk melihat prosesmu, bukan hanya jawaban
+              akhirnya.
+            </p>
+          </div>
+          <Mascot
+            variant="fullbody"
+            alt="Maskot PyScaffold"
+            className="w-36 shrink-0 sm:w-44"
+          />
+        </div>
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {cases.map((item) => (
             <Card key={item.id}>
