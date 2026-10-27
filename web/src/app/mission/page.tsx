@@ -61,7 +61,7 @@ function MissionBriefing() {
               Konteks dunia nyata · Pos gerbang Mall Grand Metro
             </CardDescription>
           </CardHeader>
-          <CardContent className="leading-7">
+          <CardContent className="leading-6">
             Pengelola parkir pusat perbelanjaan Grand Metro membutuhkan sistem
             terkomputerisasi untuk menghitung biaya parkir kendaraan roda empat
             (mobil) dan roda dua (motor). Selama ini pencatatan manual sering
