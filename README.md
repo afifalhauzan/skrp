@@ -83,7 +83,7 @@ docker compose down               # stop (data stays in the pgdata volume; `down
 ### Frontend on Vercel
 
 Project Root Directory `web`, keep "include files outside root directory" enabled (needed for `packages/shared`). Set:
-`NEXT_PUBLIC_API_MODE=live`, `API_INTERNAL_URL=https://<your-api-domain>`, `INTERNAL_API_KEY=<same as the API>`.
+`NEXT_PUBLIC_API_MODE=live`, `API_INTERNAL_URL=https://py.telaahkarier.com`, `INTERNAL_API_KEY=<same value as in the VPS .env>`. Redeploy after changing them (`NEXT_PUBLIC_*` is baked in at build time).
 Set `CORS_ORIGINS` only if you later call the API directly from browsers.
 
 ## Loading the real roster
@@ -91,7 +91,7 @@ Set `CORS_ORIGINS` only if you later call the API directly from browsers.
 Student codes are generated from the attendance number only (`1 → PY001`, `1000 → PY1000`; see `api/src/lib/studentCode.ts`). Names are nullable until supplied. Idempotent import (safe to re-run; omitted fields are left unchanged):
 
 ```bash
-curl -X POST https://<api>/api/students/import \
+curl -X POST https://py.telaahkarier.com/api/students/import \
   -H "x-internal-key: $INTERNAL_API_KEY" -H "x-admin-key: $ADMIN_API_KEY" -H 'content-type: application/json' \
   -d '{"students":[{"attendanceNumber":1,"name":"...","className":"XII-1"}]}'
 ```
