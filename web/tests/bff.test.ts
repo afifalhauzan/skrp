@@ -59,19 +59,17 @@ describe("BFF forward()", () => {
   it("keeps the 5xx status but never forwards upstream internals", async () => {
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn()
-        .mockResolvedValue(
-          jsonResponse(
-            {
-              error: {
-                code: "INTERNAL_ERROR",
-                message: "at /srv/app/db.ts:12 password=hunter2",
-              },
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          {
+            error: {
+              code: "INTERNAL_ERROR",
+              message: "at /srv/app/db.ts:12 password=hunter2",
             },
-            500,
-          ),
+          },
+          500,
         ),
+      ),
     );
     const res = await call();
     expect(res.status).toBe(500);

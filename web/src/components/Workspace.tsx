@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ProgressBar } from "./ProgressBar";
 import { FlowchartEditor } from "./FlowchartEditor";
 import { PythonPanel } from "@/features/python-editor/PythonPanel";
+import { TestPanel } from "@/features/python-editor/TestPanel";
 import { useLearning } from "@/features/learning/LearningProvider";
 import {
   getCase,
@@ -51,7 +52,8 @@ function WorkspaceInner({
   const draft = learning.codeFor(caseId);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
-  const [testsRun, setTestsRun] = useState(completed.includes("test"));
+  // The exact code that last passed every test; the stage unlocks only for that code.
+  const [passedSource, setPassedSource] = useState<string | null>(null);
 
   useEffect(() => {
     const done = completedKey ? completedKey.split(",") : [];
@@ -75,7 +77,7 @@ function WorkspaceInner({
         ? Boolean(pseudocode.trim())
         : current === "implement"
           ? Boolean(draft.run)
-          : testsRun;
+          : completed.includes("test") || passedSource === draft.source;
 
   const advance = async () => {
     setBusy(true);
@@ -184,10 +186,13 @@ function WorkspaceInner({
                 />
               )}
               {current === "test" && (
-                <Test
-                  item={item}
-                  tested={testsRun}
-                  onRetry={() => setTestsRun(true)}
+                <TestPanel
+                  tests={item.tests}
+                  source={draft.source}
+                  onComplete={(allPassed, source) =>
+                    setPassedSource(allPassed ? source : null)
+                  }
+                  onEditCode={() => go("implement")}
                 />
               )}
               <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
@@ -230,6 +235,14 @@ function WorkspaceInner({
               <CardContent>
                 <Badge variant="secondary">Tujuan misi</Badge>
                 <p className="mt-3 text-sm leading-6">{item.goal}</p>
+                <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Aturan &amp; format
+                </p>
+                <ul className="mt-2 list-disc space-y-1.5 pl-4 text-sm leading-5">
+                  {item.rules.map((rule) => (
+                    <li key={rule}>{rule}</li>
+                  ))}
+                </ul>
                 <p className="mt-3 text-xs leading-5 text-muted-foreground">
                   Tahap ditandai selesai setelah hasil kerjanya terisi
                 </p>
@@ -314,56 +327,6 @@ function Design({
           spellCheck={false}
           className="rounded-xl border-zinc-800 bg-zinc-950 p-4 font-mono text-sm leading-6 text-zinc-100 placeholder:text-zinc-500 focus-visible:border-primary"
         />
-      </div>
-    </div>
-  );
-}
-
-function Test({
-  item,
-  tested,
-  onRetry,
-}: {
-  item: ReturnType<typeof getCase>;
-  tested: boolean;
-  onRetry: () => void;
-}) {
-  return (
-    <div>
-      <p className="mb-4 text-sm text-muted-foreground">
-        Periksa output aktual dan bandingkan dengan ekspektasi. Hasil di bawah
-        adalah contoh data uji.
-      </p>
-      <div className="overflow-x-auto rounded-xl border">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-muted text-xs uppercase text-muted-foreground">
-            <tr>
-              <th className="p-3">Input</th>
-              <th className="p-3">Ekspektasi</th>
-              <th className="p-3">Aktual</th>
-              <th className="p-3">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {item.tests.map((test) => (
-              <tr key={test.id} className="border-t">
-                <td className="p-3">{test.input}</td>
-                <td className="p-3 font-mono">{test.expected}</td>
-                <td className="p-3 font-mono">{test.actual}</td>
-                <td className="p-3">
-                  <Badge variant={test.passed ? "default" : "destructive"}>
-                    {test.passed ? "Lulus" : "Perlu revisi"}
-                  </Badge>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="mt-4">
-        <Button variant="outline" onClick={onRetry}>
-          {tested ? "Uji ulang" : "Jalankan semua tes"}
-        </Button>
       </div>
     </div>
   );

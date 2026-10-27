@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useLearning } from "@/features/learning/LearningProvider";
-import { getCase, stages } from "@/lib/mock-data";
+import { cases, getCase, stages } from "@/lib/mock-data";
 import { containerCls } from "@/lib/ui";
 import { cn } from "@/lib/utils";
 
@@ -28,8 +28,7 @@ function CaseReviewContent({ caseId }: { caseId: string }) {
   const item = getCase(caseId);
   const complete = done.length === stages.length;
   const percent = Math.round((done.length / stages.length) * 100);
-  const next =
-    caseId === "case-1" ? "case-2" : caseId === "case-2" ? "case-3" : null;
+  const next = cases[cases.findIndex((c) => c.id === caseId) + 1]?.id ?? null;
   return (
     <Shell>
       <main className={cn(containerCls, "space-y-4 pb-12 pt-6 sm:pt-10")}>
@@ -84,7 +83,7 @@ function CaseReviewContent({ caseId }: { caseId: string }) {
               </p>
               <h2 className="font-heading text-xl font-semibold">
                 {next
-                  ? `Lanjut ke Kasus ${next.slice(-1)}`
+                  ? `Lanjut ke Kasus ${cases.find((c) => c.id === next)?.number}`
                   : "Kamu mencapai akhir pembelajaran"}
               </h2>
               <p className="text-sm leading-6 text-muted-foreground">
@@ -92,9 +91,7 @@ function CaseReviewContent({ caseId }: { caseId: string }) {
                   ? "Kamu siap melanjutkan ke misi berikutnya."
                   : "Semua kasus utama telah diselesaikan."}
               </p>
-              <LinkButton
-                href={next ? `/learn/${next}/understand` : "/final-review"}
-              >
+              <LinkButton href={next ? `/mission/${next}` : "/final-review"}>
                 {next ? "Lanjutkan misi" : "Lihat evaluasi akhir"}{" "}
                 <ArrowRight />
               </LinkButton>

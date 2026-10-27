@@ -42,8 +42,10 @@ export default function Home() {
                 Kuasai Python melalui pemecahan masalah terstruktur
               </h1>
               <p className="mt-4 text-base leading-7 text-muted-foreground">
-                Dari memahami masalah sampai kode berhasil dijalankan, kamu bakal belajar langkah demi langkah. 
-                Ada teman belajar yang siap kasih petunjuk saat kamu butuh. Makin lama, kamu makin jago menyelesaikannya sendiri!
+                Dari memahami masalah sampai kode berhasil dijalankan, kamu
+                bakal belajar langkah demi langkah. Ada teman belajar yang siap
+                kasih petunjuk saat kamu butuh. Makin lama, kamu makin jago
+                menyelesaikannya sendiri!
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <LinkButton href="/login" size="lg">

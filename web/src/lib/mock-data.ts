@@ -22,23 +22,50 @@ export const cases: CaseDefinition[] = [
     support: "HIGH",
     context:
       "Pengelola parkir pusat perbelanjaan Grand Metro membutuhkan sistem terkomputerisasi untuk menghitung biaya parkir kendaraan berdasarkan jenis kendaraan dan lama jam parkir.",
+    scenario:
+      "Pengelola parkir pusat perbelanjaan Grand Metro membutuhkan sistem terkomputerisasi untuk menghitung biaya parkir kendaraan roda empat (mobil) dan roda dua (motor). Selama ini pencatatan manual sering menimbulkan antrean dan selisih tarif. Kamu ditugaskan membangun program Python yang menghitung biaya secara otomatis berdasarkan jenis kendaraan dan lama jam parkir dengan aturan bertingkat.",
+    place: "Pos gerbang Mall Grand Metro",
+    minutes: 15,
     goal: "Buat program Python yang menghitung biaya parkir mobil atau motor dengan aturan tarif bertingkat.",
     expected:
       "Program menerima jenis kendaraan dan lama parkir, lalu menampilkan biaya parkir yang sesuai.",
+    rules: [
+      "Mobil: jam pertama Rp5.000, setiap jam berikutnya Rp3.000.",
+      "Motor: jam pertama Rp2.000, setiap jam berikutnya Rp1.000.",
+      "Tarif maksimum per hari: mobil Rp20.000, motor Rp10.000.",
+      "Input: baris 1 jenis kendaraan (mobil atau motor), baris 2 lama parkir dalam jam (bilangan bulat, minimal 1).",
+      "Output: satu baris dengan format Tarif: <angka>, contoh Tarif: 8000.",
+    ],
     tests: [
       {
         id: "t1",
-        input: "mobil, 2 jam",
-        expected: "Tarif: 10000",
-        actual: "Tarif: 10000",
-        passed: true,
+        label: "Mobil, 1 jam",
+        stdin: "mobil\n1",
+        expected: "Tarif: 5000",
       },
       {
         id: "t2",
-        input: "motor, 4 jam",
-        expected: "Tarif: 7000",
-        actual: "Tarif: 7000",
-        passed: true,
+        label: "Mobil, 2 jam",
+        stdin: "mobil\n2",
+        expected: "Tarif: 8000",
+      },
+      {
+        id: "t3",
+        label: "Motor, 4 jam",
+        stdin: "motor\n4",
+        expected: "Tarif: 5000",
+      },
+      {
+        id: "t4",
+        label: "Mobil, 7 jam (kena batas maksimum)",
+        stdin: "mobil\n7",
+        expected: "Tarif: 20000",
+      },
+      {
+        id: "t5",
+        label: "Motor, 12 jam (kena batas maksimum)",
+        stdin: "motor\n12",
+        expected: "Tarif: 10000",
       },
     ],
   },
@@ -50,23 +77,51 @@ export const cases: CaseDefinition[] = [
     support: "MODERATE",
     context:
       "Perpustakaan kelas perlu menghitung denda berdasarkan jumlah hari keterlambatan pengembalian buku.",
+    scenario:
+      "Perpustakaan kelas menyimpan puluhan buku yang dipinjam bergantian. Petugas perpustakaan sering lupa menghitung denda ketika buku dikembalikan terlambat, dan besarnya denda berbeda-beda antarpetugas. Kamu diminta membuat program Python yang menghitung denda dari jumlah hari keterlambatan, dengan tarif yang berubah setelah beberapa hari dan batas denda maksimum.",
+    place: "Perpustakaan kelas",
+    minutes: 15,
     goal: "Buat program yang menghitung denda secara terstruktur menggunakan percabangan.",
     expected:
       "Program menerima jumlah hari terlambat dan menampilkan denda yang sesuai.",
+    rules: [
+      "Tidak terlambat (0 hari): denda Rp0.",
+      "Hari ke-1 sampai ke-3: Rp1.000 per hari.",
+      "Mulai hari ke-4: Rp2.000 per hari (hari ke-1 sampai ke-3 tetap Rp1.000).",
+      "Denda maksimum Rp20.000.",
+      "Input: satu baris berisi jumlah hari terlambat (bilangan bulat, minimal 0).",
+      "Output: satu baris dengan format Denda: <angka>, contoh Denda: 7000.",
+    ],
     tests: [
       {
         id: "t1",
-        input: "3 hari",
-        expected: "Denda: 3000",
-        actual: "Denda: 3000",
-        passed: true,
+        label: "Tidak terlambat (0 hari)",
+        stdin: "0",
+        expected: "Denda: 0",
       },
       {
         id: "t2",
-        input: "0 hari",
-        expected: "Denda: 0",
-        actual: "Denda: 0",
-        passed: true,
+        label: "Terlambat 3 hari",
+        stdin: "3",
+        expected: "Denda: 3000",
+      },
+      {
+        id: "t3",
+        label: "Terlambat 5 hari",
+        stdin: "5",
+        expected: "Denda: 7000",
+      },
+      {
+        id: "t4",
+        label: "Terlambat 10 hari",
+        stdin: "10",
+        expected: "Denda: 17000",
+      },
+      {
+        id: "t5",
+        label: "Terlambat 15 hari (kena batas maksimum)",
+        stdin: "15",
+        expected: "Denda: 20000",
       },
     ],
   },
@@ -78,23 +133,36 @@ export const cases: CaseDefinition[] = [
     support: "LOW",
     context:
       "Tim kebun mencatat tinggi tanaman setiap minggu untuk mencari nilai rata-rata pertumbuhannya.",
+    scenario:
+      "Tim kebun sekolah mencatat tinggi tanaman cabai setiap minggu. Data disalin tangan ke buku catatan, dan menghitung rata-rata pertumbuhannya memakan waktu. Kali ini kamu mengerjakan hampir sepenuhnya sendiri: tentukan sendiri langkah penyelesaiannya, lalu buat program Python yang menghitung rata-rata dari sejumlah data tinggi tanaman.",
+    place: "Kebun sekolah",
+    minutes: 20,
     goal: "Buat program yang menghitung rata-rata dari beberapa data tinggi tanaman.",
     expected:
       "Program menerima daftar tinggi tanaman dan menampilkan nilai rata-ratanya.",
+    rules: [
+      "Input: satu baris berisi tinggi tanaman dalam cm, dipisah spasi (bisa desimal), minimal satu data.",
+      "Output: satu baris dengan format Rata-rata: <angka> dibulatkan satu angka desimal, contoh Rata-rata: 12.0.",
+    ],
     tests: [
       {
         id: "t1",
-        input: "10, 12, 14",
-        expected: "Rata-rata: 12",
-        actual: "Rata-rata: 12",
-        passed: true,
+        label: "Tiga data bulat",
+        stdin: "10 12 14",
+        expected: "Rata-rata: 12.0",
       },
       {
         id: "t2",
-        input: "8, 9, 10, 11",
+        label: "Empat data (hasil desimal)",
+        stdin: "8 9 10 11",
         expected: "Rata-rata: 9.5",
-        actual: "Rata-rata: 9.5",
-        passed: true,
+      },
+      { id: "t3", label: "Satu data", stdin: "7", expected: "Rata-rata: 7.0" },
+      {
+        id: "t4",
+        label: "Data desimal",
+        stdin: "15.5 14.5 16",
+        expected: "Rata-rata: 15.3",
       },
     ],
   },
@@ -112,14 +180,10 @@ export const codeDrafts: Record<string, string> = {
 jenis = input("Jenis kendaraan (mobil/motor): ")
 jam = int(input("Lama parkir (jam): "))
 
-# TODO: isi tarif per jam sesuai jenis kendaraan
-if jenis == "mobil":
-    tarif_per_jam = 0
-else:
-    tarif_per_jam = 0
+# TODO: hitung tarif sesuai aturan (jam pertama, jam berikutnya, batas maksimum)
+tarif = 0
 
-total = tarif_per_jam * jam
-print(f"Tarif: {total}")
+print(f"Tarif: {tarif}")
 `,
   "case-2": `# Kasus 2: denda keterlambatan buku
 hari = int(input("Jumlah hari terlambat: "))
@@ -133,12 +197,10 @@ print(f"Denda: {denda}")
 # Tulis solusi kamu di sini
 `,
 };
-/** Contoh isi input() per kasus (satu baris per input()). */
-export const stdinDrafts: Record<string, string> = {
-  "case-1": "mobil\n2",
-  "case-2": "3",
-  "case-3": "10, 12, 14",
-};
+/** Contoh isi input() per kasus (satu baris per input()): diambil dari tes pertama. */
+export const stdinDrafts: Record<string, string> = Object.fromEntries(
+  cases.map((c) => [c.id, c.tests[0]?.stdin ?? ""]),
+);
 export const getCodeDraft = (caseId: string) => codeDrafts[caseId] ?? "";
 export const getStdinDraft = (caseId: string) => stdinDrafts[caseId] ?? "";
 const ai = (

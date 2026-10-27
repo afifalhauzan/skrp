@@ -12,10 +12,12 @@ export type {
 export type SupportLevel = "HIGH" | "MODERATE" | "LOW";
 export interface TestCase {
   id: string;
-  input: string;
+  /** Short human-readable description of the scenario. */
+  label: string;
+  /** Lines fed to input(), one per call. */
+  stdin: string;
+  /** The program's last output line must equal this (prompts before it are ignored). */
   expected: string;
-  actual: string;
-  passed: boolean;
 }
 export interface CaseDefinition {
   id: string;
@@ -24,7 +26,14 @@ export interface CaseDefinition {
   subtitle: string;
   support: SupportLevel;
   context: string;
+  /** Longer narrative for the mission briefing page. */
+  scenario: string;
+  /** Where the story takes place, shown on the briefing page. */
+  place: string;
+  minutes: number;
   goal: string;
   expected: string;
+  /** Rules and I/O format the student must follow; shown in every stage. */
+  rules: string[];
   tests: TestCase[];
 }
