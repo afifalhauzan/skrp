@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Assistant } from "./Assistant";
+import { ExplorationDetails } from "./ExplorationSection";
 import { StudentGate } from "./AsyncState";
 import { LinkButton, Shell } from "./Shell";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,7 @@ import {
   getFlowchartDraft,
   stages,
 } from "@/lib/mock-data";
+import { LABEL_CORE, STAGE_COPY } from "@/lib/strategy-copy";
 import { containerCls } from "@/lib/ui";
 import { cn } from "@/lib/utils";
 import type { Flowchart, ProblemSpec, StageId } from "@/lib/types";
@@ -154,6 +156,9 @@ function WorkspaceInner({
                   {completed.includes(current) ? "Selesai" : "Aktif"}
                 </Badge>
               </div>
+              <p className="mb-5 rounded-xl bg-muted p-3 text-sm leading-6 text-muted-foreground">
+                {STAGE_COPY[current]}
+              </p>
               {current === "understand" && (
                 <Understand
                   spec={spec}
@@ -172,18 +177,23 @@ function WorkspaceInner({
                 />
               )}
               {current === "implement" && (
-                <PythonPanel
-                  source={draft.source}
-                  draftSource={getCodeDraft(caseId)}
-                  stdin={draft.stdin}
-                  result={draft.run}
-                  saveStatus={saveStatus}
-                  onSourceChange={(source) =>
-                    learning.setCode(caseId, { source })
-                  }
-                  onStdinChange={(stdin) => learning.setCode(caseId, { stdin })}
-                  onResult={(run) => learning.recordRun(caseId, run)}
-                />
+                <div className="space-y-4">
+                  <ExplorationDetails item={item} />
+                  <PythonPanel
+                    source={draft.source}
+                    draftSource={getCodeDraft(caseId)}
+                    stdin={draft.stdin}
+                    result={draft.run}
+                    saveStatus={saveStatus}
+                    onSourceChange={(source) =>
+                      learning.setCode(caseId, { source })
+                    }
+                    onStdinChange={(stdin) =>
+                      learning.setCode(caseId, { stdin })
+                    }
+                    onResult={(run) => learning.recordRun(caseId, run)}
+                  />
+                </div>
               )}
               {current === "test" && (
                 <TestPanel
@@ -230,13 +240,13 @@ function WorkspaceInner({
             </CardContent>
           </Card>
           <div className="space-y-4">
-            <Assistant stage={title} />
+            <Assistant stage={title} stageId={current} />
             <Card>
               <CardContent>
-                <Badge variant="secondary">Tujuan misi</Badge>
+                <Badge variant="secondary">{LABEL_CORE}</Badge>
                 <p className="mt-3 text-sm leading-6">{item.goal}</p>
                 <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Aturan &amp; format
+                  Aturan tugas inti
                 </p>
                 <ul className="mt-2 list-disc space-y-1.5 pl-4 text-sm leading-5">
                   {item.rules.map((rule) => (
@@ -303,10 +313,7 @@ function Design({
 }) {
   return (
     <div className="space-y-5">
-      <p className="rounded-xl bg-muted p-3 text-sm leading-6 text-muted-foreground">
-        Susun algoritma dalam langkah-langkah singkat, lalu gambarkan sebagai
-        flowchart.
-      </p>
+      <ExplorationDetails item={getCase(caseId)} />
       <FlowchartEditor
         key={caseId}
         value={flowchart}

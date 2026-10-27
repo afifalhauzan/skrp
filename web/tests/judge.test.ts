@@ -92,16 +92,33 @@ else:
 if tarif > batas:
     tarif = batas
 print(f"Tarif: {tarif}")`,
-  "case-2": `hari = int(input("Hari: "))
-if hari <= 3:
-    denda = hari * 1000
+  "case-2": `layanan = input("Layanan: ")
+berat = int(input("Berat: "))
+if layanan == "reguler":
+    awal, lanjut, batas = 8000, 6000, 100000
 else:
-    denda = 3000 + (hari - 3) * 2000
-if denda > 20000:
-    denda = 20000
+    awal, lanjut, batas = 15000, 12000, 180000
+if berat <= 5:
+    ongkir = berat * awal
+else:
+    ongkir = 5 * awal + (berat - 5) * lanjut
+if ongkir > batas:
+    ongkir = batas
+print(f"Ongkir: {ongkir}")`,
+  "case-3": `koleksi = input("Koleksi: ")
+hari = int(input("Hari: "))
+if koleksi == "buku":
+    tarif, batas = 1000, 20000
+elif koleksi == "majalah":
+    tarif, batas = 500, 10000
+else:
+    tarif, batas = 2000, 40000
+if hari == 0:
+    denda = 0
+else:
+    denda = max(hari * tarif, 1000)
+    denda = min(denda, batas)
 print(f"Denda: {denda}")`,
-  "case-3": `data = [float(x) for x in input().split()]
-print(f"Rata-rata: {sum(data) / len(data):.1f}")`,
 };
 
 describe("case test fixtures", () => {

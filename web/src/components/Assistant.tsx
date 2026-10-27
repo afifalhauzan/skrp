@@ -2,9 +2,20 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  ASSISTANT_HINT_STAGES,
+  ASSISTANT_STRATEGY_HINT,
+} from "@/lib/strategy-copy";
+import type { StageId } from "@/lib/types";
 import { Mascot } from "./Mascot";
 
-export function Assistant({ stage }: { stage: string }) {
+export function Assistant({
+  stage,
+  stageId,
+}: {
+  stage: string;
+  stageId?: StageId;
+}) {
   const [state, setState] = useState<"idle" | "loading" | "shown" | "error">(
     "idle",
   );
@@ -50,6 +61,11 @@ export function Assistant({ stage }: { stage: string }) {
                 dan hasil yang ingin dilihat. Mulai dari kata kerja utama pada
                 misi.
               </p>
+              {stageId && ASSISTANT_HINT_STAGES.includes(stageId) && (
+                <p className="text-sm leading-6 text-muted-foreground">
+                  {ASSISTANT_STRATEGY_HINT}
+                </p>
+              )}
               <Button
                 variant="ghost"
                 size="sm"

@@ -111,6 +111,7 @@ CodeMirror 6 editor, an `Input (stdin)` panel (one line per `input()` call), Run
 - **No real authentication.** A student code identifies a record; it is not a credential. Anyone who knows or guesses a code can read/write that student's progress through the site. Add real login/session before treating data as trustworthy.
 - Browser-run results are client-reported, not verified evidence.
 - Python: standard library only (no `micropip`/numpy loading); Pyodide is fetched from a CDN unless self-hosted.
-- The test stage, case routing, and the assistant are still mock fixtures; no AI is connected (`api/src/integrations/langchain/README.md` is a placeholder).
+- Case content lives in `web/src/lib/mock-data.ts` (`cases`): each case has a core task (`goal`, `rules`, `tests`, which drive the test stage) and a separate optional `exploration` (ideas for "strategi algoritmik"). Exploration is never graded, never blocks a stage or case, and does not affect routing; shared wording is in `web/src/lib/strategy-copy.ts`. The tariffs, shipping rates and fines in the rules are illustrative example numbers, not official figures.
+- Case routing (1 → 2 → 3) and the assistant are still mock fixtures; the test stage runs the student's code in Pyodide against each case's `tests`. No AI is connected (`api/src/integrations/langchain/README.md` is a placeholder).
 - Unsaved edits are flushed on navigation/continue, not on tab close.
 - Mock mode stores data only in that browser's localStorage and is labelled `MODE: MOCK`.

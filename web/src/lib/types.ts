@@ -19,6 +19,20 @@ export interface TestCase {
   /** The program's last output line must equal this (prompts before it are ignored). */
   expected: string;
 }
+/** One optional way to extend a case with an algorithmic strategy. Never graded or required. */
+export interface ExplorationIdea {
+  title: string;
+  description: string;
+  /** Strategies/algorithms that genuinely fit this idea (e.g. "Brute force (linear search)"). */
+  strategies: string[];
+  /** Example records students may use to try the idea themselves. */
+  sampleData?: string;
+}
+export interface CaseExploration {
+  ideas: ExplorationIdea[];
+  /** Why other strategies are not suggested for this case. */
+  fit: string;
+}
 export interface CaseDefinition {
   id: string;
   number: number;
@@ -35,5 +49,7 @@ export interface CaseDefinition {
   expected: string;
   /** Rules and I/O format the student must follow; shown in every stage. */
   rules: string[];
+  /** Optional exploration; kept apart from `rules`/`tests`, which define the core task. */
+  exploration: CaseExploration;
   tests: TestCase[];
 }

@@ -1,5 +1,6 @@
 "use client";
 import { ArrowRight, CheckCircle2, Clock, Users } from "lucide-react";
+import { ExplorationSection } from "@/components/ExplorationSection";
 import { StudentGate } from "@/components/AsyncState";
 import { LinkButton, Shell } from "@/components/Shell";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { useLearning } from "@/features/learning/LearningProvider";
 import { cases } from "@/lib/mock-data";
+import { LABEL_CORE } from "@/lib/strategy-copy";
 import { containerCls } from "@/lib/ui";
 import type { SupportLevel } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -81,7 +83,7 @@ function Briefing({ caseId }: { caseId: string }) {
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Tujuan misi</CardTitle>
+              <CardTitle>{LABEL_CORE}</CardTitle>
             </CardHeader>
             <CardContent className="text-sm leading-6">
               {item.goal}
@@ -110,7 +112,7 @@ function Briefing({ caseId }: { caseId: string }) {
           </Card>
           <Card className="md:col-span-2">
             <CardHeader>
-              <CardTitle>Aturan &amp; format</CardTitle>
+              <CardTitle>Aturan &amp; format tugas inti</CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="list-disc space-y-1.5 pl-5 text-sm leading-6">
@@ -121,6 +123,7 @@ function Briefing({ caseId }: { caseId: string }) {
             </CardContent>
           </Card>
         </div>
+        <ExplorationSection item={item} />
         <Card>
           <CardContent className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <p className="max-w-md text-sm leading-6 text-muted-foreground">

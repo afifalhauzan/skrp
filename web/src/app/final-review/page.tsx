@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useLearning } from "@/features/learning/LearningProvider";
 import { cases } from "@/lib/mock-data";
+import { CASE_CARD_NOTE } from "@/lib/strategy-copy";
 import { containerCls } from "@/lib/ui";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +78,7 @@ function FinalReviewContent() {
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground">
                 4 tahap selesai · dukungan {item.support}
+                <span className="mt-1 block text-xs">{CASE_CARD_NOTE}</span>
               </CardContent>
             </Card>
           ))}

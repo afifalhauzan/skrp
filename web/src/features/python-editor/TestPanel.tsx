@@ -74,10 +74,6 @@ export function TestPanel({ tests, source, onComplete, onEditCode }: Props) {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        Kodemu dijalankan dengan setiap skenario di bawah. Baris terakhir yang
-        dicetak program harus sama persis dengan ekspektasi.
-      </p>
       <div className="overflow-x-auto rounded-xl border">
         <table className="w-full text-left text-sm">
           <thead className="bg-muted text-xs uppercase text-muted-foreground">

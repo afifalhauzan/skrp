@@ -8,9 +8,11 @@ import {
   CardDescription,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useLearning } from "@/features/learning/LearningProvider";
 import { cases, getCase, stages } from "@/lib/mock-data";
+import { COMPLETION_NOTE, BADGE_EXPLORATION } from "@/lib/strategy-copy";
 import { containerCls } from "@/lib/ui";
 import { cn } from "@/lib/utils";
 
@@ -75,6 +77,23 @@ function CaseReviewContent({ caseId }: { caseId: string }) {
             </div>
           </CardContent>
         </Card>
+        {complete && (
+          <Card className="border-dashed">
+            <CardContent className="space-y-2">
+              <Badge variant="secondary">{BADGE_EXPLORATION}</Badge>
+              <p className="text-sm leading-6 text-muted-foreground">
+                {COMPLETION_NOTE}
+              </p>
+              <LinkButton
+                href={`/mission/${item.id}#eksplorasi`}
+                variant="outline"
+                size="sm"
+              >
+                Lihat ide strategi algoritmik
+              </LinkButton>
+            </CardContent>
+          </Card>
+        )}
         {complete && (
           <Card className="border-primary/30 bg-primary/5">
             <CardContent className="space-y-3">

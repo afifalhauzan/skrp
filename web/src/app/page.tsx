@@ -4,6 +4,7 @@ import { LinkButton, Shell } from "@/components/Shell";
 import { Mascot } from "@/components/Mascot";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BADGE_EXPLORATION, INTRO_GENERAL } from "@/lib/strategy-copy";
 import { cn } from "@/lib/utils";
 
 const stages = [
@@ -78,6 +79,17 @@ export default function Home() {
             </Card>
           ))}
         </div>
+        <Card className="mt-6 border-dashed">
+          <CardHeader>
+            <Badge variant="secondary" className="w-fit">
+              {BADGE_EXPLORATION}
+            </Badge>
+            <CardTitle className="mt-2">Strategi algoritmik</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm leading-6 text-muted-foreground">
+            {INTRO_GENERAL}
+          </CardContent>
+        </Card>
       </main>
     </Shell>
   );
