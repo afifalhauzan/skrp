@@ -41,6 +41,7 @@ describe("normalizeStudentCode", () => {
     expect(normalizeStudentCode("  PY042 ")).toBe("PY042");
     expect(normalizeStudentCode("PY1000")).toBe("PY1000");
     expect(normalizeStudentCode(" validator001 ")).toBe("VALIDATOR001");
+    expect(normalizeStudentCode(" dummy01 ")).toBe("DUMMY01");
   });
 
   it("rejects malformed or non-canonical codes", () => {
@@ -57,6 +58,9 @@ describe("normalizeStudentCode", () => {
       "VALIDATOR1",
       "VALIDATOR0001",
       "VALIDATOR",
+      "DUMMY",
+      "DUMMY1",
+      "DUMMY001",
     ]) {
       expect(normalizeStudentCode(bad)).toBeNull();
     }
@@ -64,6 +68,7 @@ describe("normalizeStudentCode", () => {
 
   it("has no attendance number for special accounts", () => {
     expect(attendanceNumberFromCode("VALIDATOR001")).toBeNull();
+    expect(attendanceNumberFromCode("DUMMY01")).toBeNull();
   });
 
   it("round-trips with attendanceNumberFromCode", () => {

@@ -19,7 +19,7 @@ import { MOCK_STUDENTS } from "@/lib/api/fixtures";
 import { containerCls } from "@/lib/ui";
 import { cn } from "@/lib/utils";
 
-const CODE_FORMAT = /^(PY\d{3,}|VALIDATOR\d{3})$/;
+const CODE_FORMAT = /^(PY\d{3,}|VALIDATOR\d{3}|DUMMY\d{2})$/;
 
 export default function Login() {
   const router = useRouter();

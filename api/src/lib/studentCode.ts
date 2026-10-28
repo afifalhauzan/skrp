@@ -11,8 +11,8 @@ export const MIN_ATTENDANCE_NUMBER = 1;
 export const MAX_ATTENDANCE_NUMBER = 999_999;
 
 const CODE_PATTERN = /^PY(\d{3,})$/;
-/** Reserved non-roster accounts such as VALIDATOR001. They have no attendance number. */
-const SPECIAL_PATTERN = /^VALIDATOR\d{3}$/;
+/** Reserved non-roster accounts (VALIDATOR001, DUMMY01). They have no attendance number. */
+const SPECIAL_PATTERN = /^(VALIDATOR\d{3}|DUMMY\d{2})$/;
 
 export function isSpecialCode(code: string): boolean {
   return SPECIAL_PATTERN.test(code);

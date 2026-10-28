@@ -10,7 +10,7 @@ import type { ApiErrorBody, ApiErrorCode } from "@skrp/shared";
 const TIMEOUT_MS = 10_000;
 const MAX_BODY_BYTES = 256 * 1024;
 
-const STUDENT_CODE = /^(PY\d{3,}|VALIDATOR\d{3})$/i;
+const STUDENT_CODE = /^(PY\d{3,}|VALIDATOR\d{3}|DUMMY\d{2})$/i;
 const CASE_ID = /^[a-z0-9][a-z0-9-]{0,39}$/;
 const ARTIFACT_KINDS = new Set([
   "problem-spec",
