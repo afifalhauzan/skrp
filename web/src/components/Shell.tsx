@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, UserRound } from "lucide-react";
+import { Lock, LogOut, UserRound } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useJourney } from "@/features/learning/journey";
 import { useLearning } from "@/features/learning/LearningProvider";
 import { containerCls } from "@/lib/ui";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,7 @@ import { cn } from "@/lib/utils";
 export function Shell({ children }: { children: React.ReactNode }) {
   const { student, mode, logout } = useLearning();
   const router = useRouter();
+  const journey = useJourney();
   const signOut = () => {
     logout();
     router.push("/login");
@@ -52,15 +54,34 @@ export function Shell({ children }: { children: React.ReactNode }) {
             >
               Misi belajar
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              render={<Link href="/final-review" />}
-              nativeButton={false}
-              className="px-2 text-xs sm:px-3 sm:text-sm"
-            >
-              Perjalanan saya
-            </Button>
+            {journey.complete ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                render={<Link href="/final-review" />}
+                nativeButton={false}
+                className="px-2 text-xs sm:px-3 sm:text-sm"
+              >
+                Perjalanan saya
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled
+                aria-disabled="true"
+                title="Terbuka setelah semua misimu selesai"
+                data-testid="journey-locked"
+                className="gap-1 px-2 text-xs text-muted-foreground/60 sm:px-3 sm:text-sm"
+              >
+                <Lock className="size-3" />
+                Perjalanan saya
+                <span className="sr-only">
+                  {" "}
+                  (terkunci sampai semua misi selesai)
+                </span>
+              </Button>
+            )}
           </nav>
           {student && (
             <>
@@ -150,9 +171,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <Link href="/mission" className="hover:text-foreground">
               Misi belajar
             </Link>
-            <Link href="/final-review" className="hover:text-foreground">
-              Perjalanan saya
-            </Link>
+            {journey.complete ? (
+              <Link href="/final-review" className="hover:text-foreground">
+                Perjalanan saya
+              </Link>
+            ) : (
+              <span
+                aria-disabled="true"
+                title="Terbuka setelah semua misimu selesai"
+                className="inline-flex items-center gap-1 text-muted-foreground/50"
+              >
+                <Lock className="size-3" /> Perjalanan saya
+                <span className="sr-only"> (terkunci)</span>
+              </span>
+            )}
             <Link href="/login" className="hover:text-foreground">
               Masuk
             </Link>
