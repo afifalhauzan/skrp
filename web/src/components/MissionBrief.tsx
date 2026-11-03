@@ -1,5 +1,11 @@
 "use client";
-import { ArrowRight, CheckCircle2, Clock, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  Users,
+} from "lucide-react";
 import { ExplorationSection } from "@/components/ExplorationSection";
 import { StudentGate } from "@/components/AsyncState";
 import { LinkButton, Shell } from "@/components/Shell";
@@ -14,6 +20,7 @@ import {
 import { useLearning } from "@/features/learning/LearningProvider";
 import { cases } from "@/lib/mock-data";
 import { LABEL_CORE } from "@/lib/strategy-copy";
+import { resumeStageFor } from "@/lib/nav";
 import { containerCls } from "@/lib/ui";
 import type { SupportLevel } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -39,17 +46,29 @@ const support: Record<SupportLevel, { label: string; note: string }> = {
   },
 };
 
-export function MissionBrief({ caseId }: { caseId: string }) {
+export function MissionBrief({
+  caseId,
+  from,
+}: {
+  caseId: string;
+  /** Validated page the student came from (e.g. the stage they opened the brief from). */
+  from?: string | null;
+}) {
   return (
     <StudentGate>
-      <Briefing caseId={caseId} />
+      <Briefing caseId={caseId} from={from ?? null} />
     </StudentGate>
   );
 }
 
-function Briefing({ caseId }: { caseId: string }) {
-  const { student, mode } = useLearning();
+function Briefing({ caseId, from }: { caseId: string; from: string | null }) {
+  const { student, mode, progressFor } = useLearning();
   const item = cases.find((c) => c.id === caseId) ?? cases[0];
+  const progress = progressFor(item.id);
+  const completed = progress?.completedStages ?? [];
+  const started =
+    completed.length > 0 ||
+    (progress !== undefined && progress.status !== "NOT_STARTED");
   return (
     <Shell>
       <main className={cn(containerCls, "space-y-4 pb-12 pt-6 sm:pt-10")}>
@@ -132,9 +151,22 @@ function Briefing({ caseId }: { caseId: string }) {
               samping. Progresmu tersimpan otomatis (
               {mode === "mock" ? "memori lokal / mock" : "server"}).
             </p>
-            <LinkButton href={`/learn/${item.id}/understand`} size="lg">
-              Mulai misi: tahap 1 <ArrowRight />
-            </LinkButton>
+            {from ? (
+              <LinkButton href={from} size="lg">
+                <ArrowLeft /> Kembali ke misi
+              </LinkButton>
+            ) : started ? (
+              <LinkButton
+                href={`/learn/${item.id}/${resumeStageFor(completed)}`}
+                size="lg"
+              >
+                Lanjutkan misi <ArrowRight />
+              </LinkButton>
+            ) : (
+              <LinkButton href={`/learn/${item.id}/understand`} size="lg">
+                Mulai misi: tahap 1 <ArrowRight />
+              </LinkButton>
+            )}
           </CardContent>
         </Card>
       </main>

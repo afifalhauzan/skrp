@@ -27,6 +27,7 @@ import {
   stages,
 } from "@/lib/mock-data";
 import { STAGE_COPY } from "@/lib/strategy-copy";
+import { briefHref } from "@/lib/nav";
 import { containerCls } from "@/lib/ui";
 import { cn } from "@/lib/utils";
 import type { ClientTestResult } from "@skrp/shared";
@@ -218,7 +219,10 @@ function WorkspaceInner({
             </p> */}
           </div>
           <div className="flex flex-wrap gap-2">
-            <LinkButton href={`/mission/${caseId}`} variant="outline">
+            <LinkButton
+              href={briefHref(caseId, `/learn/${caseId}/${current}`)}
+              variant="outline"
+            >
               Lihat brief
             </LinkButton>
             <LinkButton href={`/case-review/${caseId}`} variant="outline">

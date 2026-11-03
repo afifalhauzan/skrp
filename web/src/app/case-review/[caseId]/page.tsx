@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import type { CaseEvaluation, RoutingDecision } from "@skrp/shared";
 import { ErrorCard, LoadingCard, StudentGate } from "@/components/AsyncState";
 import { LinkButton, Shell } from "@/components/Shell";
@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { useLearning } from "@/features/learning/LearningProvider";
 import { cases, getCase, stages } from "@/lib/mock-data";
 import { COMPLETION_NOTE, BADGE_EXPLORATION } from "@/lib/strategy-copy";
+import { briefHref, resumeStageFor } from "@/lib/nav";
 import { containerCls } from "@/lib/ui";
 import { cn } from "@/lib/utils";
 
@@ -69,6 +70,12 @@ function CaseReviewContent({ caseId }: { caseId: string }) {
             ? "Semua hasil kerja untuk kasus ini sudah tersimpan."
             : "Selesaikan setiap tahap untuk melihat evaluasi kasus."}
         </p>
+        <LinkButton
+          href={`/learn/${caseId}/${resumeStageFor(done)}`}
+          variant="outline"
+        >
+          <ArrowLeft /> Kembali ke misi
+        </LinkButton>
         <Card>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between gap-4">
@@ -120,7 +127,11 @@ function CaseReviewContent({ caseId }: { caseId: string }) {
                 {COMPLETION_NOTE}
               </p>
               <LinkButton
-                href={`/mission/${item.id}#eksplorasi`}
+                href={briefHref(
+                  item.id,
+                  `/case-review/${item.id}`,
+                  "#eksplorasi",
+                )}
                 variant="outline"
                 size="sm"
               >
@@ -191,7 +202,7 @@ function CaseReviewContent({ caseId }: { caseId: string }) {
                 </p>
               )}
               {routing?.status === "HOLD_INSUFFICIENT_EVIDENCE" ? (
-                <LinkButton href={`/learn/${caseId}/understand`}>
+                <LinkButton href={`/learn/${caseId}/${resumeStageFor(done)}`}>
                   Kembali ke Kasus {item.number} <ArrowRight />
                 </LinkButton>
               ) : (
@@ -202,11 +213,6 @@ function CaseReviewContent({ caseId }: { caseId: string }) {
               )}
             </CardContent>
           </Card>
-        )}
-        {!complete && (
-          <LinkButton href={`/learn/${caseId}/understand`}>
-            Kembali ke Kasus {item.number} <ArrowRight />
-          </LinkButton>
         )}
       </main>
     </Shell>
