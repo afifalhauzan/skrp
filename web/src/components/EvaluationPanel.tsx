@@ -130,7 +130,10 @@ export function EvaluationPanel({
               style={{ left: `${(min / evaluation.maxScore) * 100}%` }}
             />
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p
+            className="mt-2 w-full rounded-md border border-primary/30 bg-primary/10 px-3 py-1.5 text-center text-sm font-bold text-primary"
+            data-testid="min-score-chip"
+          >
             Batas minimal untuk lanjut: {min}/{evaluation.maxScore}
           </p>
         </div>

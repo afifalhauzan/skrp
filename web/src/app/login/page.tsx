@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Label, RequiredNote } from "@/components/ui/label";
 import { useLearning } from "@/features/learning/LearningProvider";
 import { ApiClientError } from "@/lib/api";
 import { MOCK_STUDENTS } from "@/lib/api/fixtures";
@@ -72,7 +72,9 @@ export default function Login() {
           <CardContent>
             <form onSubmit={submit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="code">Kode siswa</Label>
+                <Label htmlFor="code" required>
+                  Kode siswa
+                </Label>
                 <Input
                   id="code"
                   value={code}
@@ -83,7 +85,9 @@ export default function Login() {
                   placeholder="Contoh: PY001"
                   className="h-10 uppercase"
                   autoComplete="off"
+                  aria-required
                 />
+                <RequiredNote />
               </div>
               {error && (
                 <Alert variant="destructive">

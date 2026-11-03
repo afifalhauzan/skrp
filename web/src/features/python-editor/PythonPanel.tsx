@@ -67,7 +67,7 @@ export function PythonPanel({
     <div className="space-y-4">
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <Label>Editor Python</Label>
+          <Label required>Editor Python</Label>
           {draftSource !== undefined && source !== draftSource && (
             <Button
               variant="link"

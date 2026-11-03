@@ -1,7 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { Loader2 } from "lucide-react";
 import { Assistant } from "./Assistant";
+import { CoreTaskAccordion } from "./CoreTaskAccordion";
 import { ExplorationDetails } from "./ExplorationSection";
 import { EvaluationPanel, type EvaluationFailure } from "./EvaluationPanel";
 import { StudentGate } from "./AsyncState";
@@ -9,7 +12,7 @@ import { LinkButton, Shell } from "./Shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { Label, RequiredNote } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ProgressBar } from "./ProgressBar";
 import { FlowchartEditor } from "./FlowchartEditor";
@@ -23,7 +26,7 @@ import {
   getFlowchartDraft,
   stages,
 } from "@/lib/mock-data";
-import { LABEL_CORE, STAGE_COPY } from "@/lib/strategy-copy";
+import { STAGE_COPY } from "@/lib/strategy-copy";
 import { containerCls } from "@/lib/ui";
 import { cn } from "@/lib/utils";
 import type { ClientTestResult } from "@skrp/shared";
@@ -57,6 +60,7 @@ function WorkspaceInner({
   const draft = learning.codeFor(caseId);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
   // The exact code that last passed every test; the stage unlocks only for that code.
   const [passedSource, setPassedSource] = useState<string | null>(null);
   // Browser-reported test outcomes for the exact code they ran against (unverified evidence).
@@ -116,6 +120,7 @@ function WorkspaceInner({
     setEvaluating(true);
     setEvalError(null);
     setMessage("");
+    const toastId = toast.loading("Memeriksa jawabanmu…");
     try {
       await learning.evaluateStage(
         caseId,
@@ -124,6 +129,9 @@ function WorkspaceInner({
           ? testRun.results
           : undefined,
       );
+      toast.success("Pemeriksaan selesai. Lihat hasilnya di bawah.", {
+        id: toastId,
+      });
     } catch (error) {
       const api = error instanceof ApiClientError ? error : null;
       setEvalError({
@@ -132,6 +140,12 @@ function WorkspaceInner({
           (error instanceof Error ? error.message : "Terjadi kesalahan."),
         retryable: api ? api.isRetryable || api.isAiFailure : false,
       });
+      toast.error(
+        api?.isAiFailure || api?.isRetryable
+          ? "AI belum bisa memeriksa saat ini. Pekerjaanmu tetap tersimpan, silakan coba lagi."
+          : "Pemeriksaan gagal. Pekerjaanmu tetap tersimpan, silakan coba lagi.",
+        { id: toastId },
+      );
     } finally {
       setEvaluating(false);
     }
@@ -157,9 +171,24 @@ function WorkspaceInner({
     }
   };
   const saveDraft = async () => {
-    setMessage(
-      (await learning.saveNow()) ? "Tersimpan." : "Gagal menyimpan. Coba lagi.",
-    );
+    setSaving(true);
+    const toastId = toast.loading("Menyimpan…");
+    try {
+      const ok = await learning.saveNow();
+      setMessage(ok ? "" : "Gagal menyimpan. Coba lagi.");
+      if (ok) toast.success("Tersimpan.", { id: toastId });
+      else
+        toast.error("Gagal menyimpan. Periksa koneksi lalu coba lagi.", {
+          id: toastId,
+        });
+    } catch {
+      setMessage("Gagal menyimpan. Coba lagi.");
+      toast.error("Gagal menyimpan. Periksa koneksi lalu coba lagi.", {
+        id: toastId,
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const saveStatus =
@@ -170,6 +199,9 @@ function WorkspaceInner({
         : draft.revision
           ? `Tersimpan · revisi ${draft.revision}${learning.mode === "mock" ? " (mock lokal)" : ""}`
           : undefined;
+  const coreNote = learning.aiEnabled
+    ? "Tahap berikutnya terbuka setelah pekerjaanmu diperiksa (tombol “Periksa jawaban”)."
+    : "Tahap ditandai selesai setelah hasil kerjanya terisi";
   const failed = learning.saveState === "error" || message.startsWith("Gagal");
 
   return (
@@ -185,9 +217,14 @@ function WorkspaceInner({
               {item.context}
             </p> */}
           </div>
-          <LinkButton href={`/case-review/${caseId}`} variant="outline">
-            Lihat perkembangan
-          </LinkButton>
+          <div className="flex flex-wrap gap-2">
+            <LinkButton href={`/mission/${caseId}`} variant="outline">
+              Lihat brief
+            </LinkButton>
+            <LinkButton href={`/case-review/${caseId}`} variant="outline">
+              Lihat perkembangan
+            </LinkButton>
+          </div>
         </div>
         <ProgressBar
           caseId={caseId}
@@ -195,6 +232,7 @@ function WorkspaceInner({
           completed={completed}
           onNavigate={go}
         />
+        <CoreTaskAccordion item={item} note={coreNote} className="lg:hidden" />
         <div className="grid gap-4 lg:grid-cols-[1fr_290px]">
           <Card>
             <CardContent>
@@ -275,7 +313,7 @@ function WorkspaceInner({
                   onRetry={runEvaluation}
                 />
               )}
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+              <div className="mt-6 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                 <span
                   className={cn(
                     "text-sm",
@@ -294,29 +332,48 @@ function WorkspaceInner({
                     </button>
                   )}
                 </span>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
                   {learning.aiEnabled && (
                     <Button
                       variant="secondary"
                       onClick={runEvaluation}
                       disabled={
-                        evaluating || busy || !workReady || !testsRunForThisCode
+                        evaluating ||
+                        busy ||
+                        saving ||
+                        !workReady ||
+                        !testsRunForThisCode
                       }
                       title={
                         !testsRunForThisCode
                           ? "Jalankan semua tes untuk kode ini dulu"
                           : undefined
                       }
+                      className="w-full sm:w-auto"
                     >
+                      {evaluating && <Loader2 className="animate-spin" />}
                       {evaluating ? "Memeriksa…" : "Periksa jawaban"}
                     </Button>
                   )}
-                  <Button variant="outline" onClick={saveDraft} disabled={busy}>
-                    {completed.includes(current)
-                      ? "Simpan perubahan"
-                      : "Simpan draf"}
+                  <Button
+                    variant="outline"
+                    onClick={saveDraft}
+                    disabled={busy || saving || evaluating}
+                    className="w-full sm:w-auto"
+                  >
+                    {saving && <Loader2 className="animate-spin" />}
+                    {saving
+                      ? "Menyimpan…"
+                      : completed.includes(current)
+                        ? "Simpan perubahan"
+                        : "Simpan draf"}
                   </Button>
-                  <Button onClick={advance} disabled={!canContinue || busy}>
+                  <Button
+                    onClick={advance}
+                    disabled={!canContinue || busy || saving}
+                    className="h-12 w-full text-base sm:h-9 sm:w-auto sm:text-sm"
+                  >
+                    {busy && <Loader2 className="animate-spin" />}
                     {nextStage
                       ? `Lanjut ke ${nextStage.short}`
                       : "Selesaikan kasus"}
@@ -327,25 +384,12 @@ function WorkspaceInner({
           </Card>
           <div className="space-y-4">
             <Assistant caseId={caseId} stageId={current} stage={title} />
-            <Card>
-              <CardContent>
-                <Badge variant="secondary">{LABEL_CORE}</Badge>
-                <p className="mt-3 text-sm leading-6">{item.goal}</p>
-                <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Aturan tugas inti
-                </p>
-                <ul className="mt-2 list-disc space-y-1.5 pl-4 text-sm leading-5">
-                  {item.rules.map((rule) => (
-                    <li key={rule}>{rule}</li>
-                  ))}
-                </ul>
-                <p className="mt-3 text-xs leading-5 text-muted-foreground">
-                  {learning.aiEnabled
-                    ? "Tahap berikutnya terbuka setelah pekerjaanmu diperiksa (tombol “Periksa jawaban”)."
-                    : "Tahap ditandai selesai setelah hasil kerjanya terisi"}
-                </p>
-              </CardContent>
-            </Card>
+            <CoreTaskAccordion
+              item={item}
+              note={coreNote}
+              defaultOpen
+              className="hidden lg:block"
+            />
           </div>
         </div>
       </main>
@@ -369,12 +413,16 @@ function Understand({
   ];
   return (
     <div className="space-y-4">
+      <RequiredNote />
       {fields.map(([key, label, placeholder]) => (
         <div key={key} className="space-y-2">
-          <Label htmlFor={`spec-${key}`}>{label}</Label>
+          <Label htmlFor={`spec-${key}`} required>
+            {label}
+          </Label>
           <Textarea
             id={`spec-${key}`}
             aria-label={label}
+            aria-required
             value={spec[key]}
             onChange={(e) => onChange({ ...spec, [key]: e.target.value })}
             placeholder={placeholder}
@@ -409,10 +457,13 @@ function Design({
         onChange={onFlowchartChange}
       />
       <div className="space-y-2">
-        <Label htmlFor="pseudocode">Pseudocode</Label>
+        <Label htmlFor="pseudocode" required>
+          Pseudocode
+        </Label>
         <Textarea
           id="pseudocode"
           aria-label="Pseudocode"
+          aria-required
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={
