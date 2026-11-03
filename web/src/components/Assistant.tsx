@@ -170,7 +170,7 @@ export function Assistant({
           <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="secondary"
-              size="sm"
+              size="lg"
               onClick={ask}
               disabled={loading}
             >
@@ -197,7 +197,7 @@ export function Assistant({
           {aiEnabled && history && (
             <p className="text-xs text-muted-foreground">
               Petunjuk berikutnya: tingkat {history.nextLevel} (maks.{" "}
-              {history.maxLevel}). Tingkat ditentukan aplikasi.
+              {history.maxLevel}).
             </p>
           )}
 

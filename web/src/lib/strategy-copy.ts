@@ -7,7 +7,7 @@ import type { StageId } from "./types";
  */
 
 export const LABEL_CORE = "Tugas Inti";
-export const LABEL_EXPLORATION = "Eksplorasi Opsional: Strategi Algoritmik";
+export const LABEL_EXPLORATION = "Strategi Algoritmik";
 export const BADGE_EXPLORATION = "Eksplorasi opsional";
 
 /** General introduction of the learning media (landing page). */

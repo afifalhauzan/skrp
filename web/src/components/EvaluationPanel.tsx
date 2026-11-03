@@ -99,7 +99,7 @@ export function EvaluationPanel({
       <CardContent className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <p className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
               Hasil pemeriksaan
             </p>
             <p className="font-heading text-2xl font-bold">
