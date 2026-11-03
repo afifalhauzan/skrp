@@ -1,6 +1,6 @@
 import { containerCls } from "@/lib/ui";
-import { ArrowRight } from "lucide-react";
-import { LinkButton, Shell } from "@/components/Shell";
+import { Shell } from "@/components/Shell";
+import { StartLearningButton } from "@/components/StartLearningButton";
 import { Mascot } from "@/components/Mascot";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,9 +49,7 @@ export default function Home() {
                 menyelesaikannya sendiri!
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <LinkButton href="/login" size="lg">
-                  Mulai belajar <ArrowRight />
-                </LinkButton>
+                <StartLearningButton />
               </div>
             </div>
             <Mascot

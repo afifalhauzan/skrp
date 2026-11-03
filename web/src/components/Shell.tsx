@@ -46,15 +46,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <Button
               variant="ghost"
               size="sm"
-              render={<Link href="/mission" />}
-              nativeButton={false}
-              className="px-2 text-xs sm:px-3 sm:text-sm"
-            >
-              Misi belajar
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
               render={<Link href="/final-review" />}
               nativeButton={false}
               className="px-2 text-xs sm:px-3 sm:text-sm"

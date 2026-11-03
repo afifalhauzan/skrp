@@ -1,4 +1,4 @@
-import type { CaseProgress, RoutingDecision } from "@skrp/shared";
+import type { CaseProgress, RoutingDecision, StageId } from "@skrp/shared";
 import { stages } from "../../lib/mock-data";
 import type { CaseDefinition } from "../../lib/types";
 
@@ -11,6 +11,8 @@ export interface JourneyCase {
   completedStages: number;
   /** Not reachable yet: it comes after the case the student is currently on. */
   locked: boolean;
+  /** Where "continue" should land: the first unfinished stage (the last one when all are done). */
+  resumeStage: StageId;
 }
 
 export interface Journey {
@@ -59,7 +61,17 @@ export function computeJourney(input: {
           : done > 0 || progress?.status === "IN_PROGRESS"
             ? "IN_PROGRESS"
             : "NOT_STARTED";
-      return { item, status, completedStages: done, locked: false };
+      const resumeStage = (
+        stages.find((s) => !progress?.completedStages.includes(s.id)) ??
+        stages[stages.length - 1]
+      ).id;
+      return {
+        item,
+        status,
+        completedStages: done,
+        locked: false,
+        resumeStage,
+      };
     });
   // Everything after the first unfinished case is still locked.
   const firstOpen = path.findIndex((c) => c.status !== "COMPLETED");

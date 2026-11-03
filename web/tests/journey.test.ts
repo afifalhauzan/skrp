@@ -61,6 +61,20 @@ const journey = (
     aiEnabled,
   });
 
+describe("computeJourney: resume stage", () => {
+  it("points each case at its first unfinished stage", () => {
+    const j = journey([
+      progress("case-1", ALL),
+      progress("case-2", ["understand", "design"]),
+    ]);
+    expect(j.cases.map((c) => c.resumeStage)).toEqual([
+      "test",
+      "implement",
+      "understand",
+    ]);
+  });
+});
+
 describe("computeJourney: locked cases", () => {
   const locks = (j: ReturnType<typeof journey>) =>
     j.cases.map((c) => [c.item.id, c.locked]);

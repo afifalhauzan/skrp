@@ -8,7 +8,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Mascot } from "@/components/Mascot";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -138,57 +144,86 @@ function FinalReviewContent() {
             journey.cases.length >= 3 ? "md:grid-cols-3" : "md:grid-cols-2",
           )}
         >
-          {journey.cases.map(({ item, status, completedStages, locked }) => {
-            const score = scoreOf(item.id);
-            return (
-              <Card
-                key={item.id}
-                aria-disabled={locked || undefined}
-                data-testid={locked ? "case-card-locked" : "case-card"}
-                className={cn(locked && "bg-muted/60 text-muted-foreground")}
-              >
-                <CardHeader>
-                  <div className="flex items-center justify-between gap-2">
-                    <Badge variant="secondary" className="w-fit">
-                      Kasus {item.number}
-                    </Badge>
-                    {locked ? (
-                      <Badge variant="outline" className="gap-1">
-                        <Lock className="size-3" /> Terkunci
-                      </Badge>
-                    ) : (
-                      <Badge variant={STATUS_VARIANT[status]}>
-                        {STATUS_LABEL[status]}
-                      </Badge>
-                    )}
-                  </div>
-                  <CardTitle
-                    className={cn("mt-2", locked && "text-muted-foreground")}
-                  >
-                    {item.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm text-muted-foreground">
-                  {locked ? (
-                    <span>Terbuka setelah misi sebelumnya selesai.</span>
-                  ) : (
-                    <>
-                      {completedStages} dari {stages.length} tahap selesai ·
-                      dukungan {item.support}
-                      {score && (
-                        <span className="mt-1 block text-xs">
-                          Skor sementara {score.score}/{score.max}
-                        </span>
-                      )}
-                      <span className="mt-1 block text-xs">
-                        {CASE_CARD_NOTE}
-                      </span>
-                    </>
+          {journey.cases.map(
+            ({ item, status, completedStages, locked, resumeStage }) => {
+              const score = scoreOf(item.id);
+              return (
+                <Card
+                  key={item.id}
+                  aria-disabled={locked || undefined}
+                  data-testid={locked ? "case-card-locked" : "case-card"}
+                  className={cn(
+                    "relative",
+                    locked
+                      ? "bg-muted/60 text-muted-foreground"
+                      : "transition hover:ring-primary/40",
                   )}
-                </CardContent>
-              </Card>
-            );
-          })}
+                >
+                  <CardHeader>
+                    <div className="flex items-center justify-between gap-2">
+                      <Badge variant="secondary" className="w-fit">
+                        Kasus {item.number}
+                      </Badge>
+                      {locked ? (
+                        <Badge variant="outline" className="gap-1">
+                          <Lock className="size-3" /> Terkunci
+                        </Badge>
+                      ) : (
+                        <Badge variant={STATUS_VARIANT[status]}>
+                          {STATUS_LABEL[status]}
+                        </Badge>
+                      )}
+                    </div>
+                    <CardTitle
+                      className={cn("mt-2", locked && "text-muted-foreground")}
+                    >
+                      {item.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm text-muted-foreground">
+                    {locked ? (
+                      <span>Terbuka setelah misi sebelumnya selesai.</span>
+                    ) : (
+                      <>
+                        {completedStages} dari {stages.length} tahap selesai ·
+                        dukungan {item.support}
+                        {score && (
+                          <span className="mt-1 block text-xs">
+                            Skor sementara {score.score}/{score.max}
+                          </span>
+                        )}
+                        <span className="mt-1 block text-xs">
+                          {CASE_CARD_NOTE}
+                        </span>
+                      </>
+                    )}
+                  </CardContent>
+                  {!locked && (
+                    <CardFooter>
+                      {/* The link stretches over the whole card (one tab stop, whole card clickable). */}
+                      <LinkButton
+                        href={
+                          status === "NOT_STARTED"
+                            ? `/mission/${item.id}`
+                            : `/learn/${item.id}/${resumeStage}`
+                        }
+                        variant={status === "COMPLETED" ? "outline" : "default"}
+                        // A transform on the link (the button press effect) would shrink the stretched overlay
+                        // to the button while the mouse is down, so the press effect is switched off here.
+                        className="after:absolute after:inset-0 active:not-aria-[haspopup]:translate-none"
+                      >
+                        {status === "NOT_STARTED"
+                          ? "Mulai misi"
+                          : status === "COMPLETED"
+                            ? "Buka misi"
+                            : "Lanjutkan misi"}
+                      </LinkButton>
+                    </CardFooter>
+                  )}
+                </Card>
+              );
+            },
+          )}
         </div>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <Card>

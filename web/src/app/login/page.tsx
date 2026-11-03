@@ -1,5 +1,5 @@
 "use client";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Shell } from "@/components/Shell";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -23,10 +23,15 @@ const CODE_FORMAT = /^(PY\d{3,}|VALIDATOR\d{3}|DUMMY\d{2})$/;
 
 export default function Login() {
   const router = useRouter();
-  const { login, mode } = useLearning();
+  const { login, mode, student } = useLearning();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // Already signed in (the session is remembered): no need to enter the code again.
+  useEffect(() => {
+    if (student && !busy) router.replace("/final-review");
+  }, [student, busy, router]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -38,7 +43,7 @@ export default function Login() {
     setBusy(true);
     try {
       await login(value);
-      router.push("/mission");
+      router.push("/final-review");
     } catch (err) {
       if (err instanceof ApiClientError && err.isNotFound) {
         setError(
