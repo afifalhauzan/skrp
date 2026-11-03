@@ -80,6 +80,8 @@ export class ApiClientError extends Error {
     message: string,
     /** Safe identifiers from the server (e.g. the failed evaluation's id). */
     readonly meta?: Record<string, string>,
+    /** From the `Retry-After` response header, in milliseconds. */
+    readonly retryAfterMs?: number,
   ) {
     super(message);
     this.name = "ApiClientError";
