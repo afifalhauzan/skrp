@@ -90,66 +90,14 @@ function FinalReviewContent() {
         ),
       ).slice(0, 5)
     : [];
-  const defaultStrengths = [
-    "Menguraikan masalah sebelum membuat kode",
-    "Menghubungkan algoritma dengan implementasi",
-    "Membaca bukti dari hasil pengujian",
-  ];
-
-  if (!journey.complete) {
-    return (
-      <Shell>
-        <main className={cn(containerCls, "pb-12 pt-6 sm:pt-10")}>
-          <Card
-            className="mx-auto max-w-2xl bg-muted/60"
-            data-testid="journey-locked-page"
-          >
-            <CardHeader>
-              <div className="grid size-12 place-items-center rounded-full bg-muted text-muted-foreground">
-                <Lock className="size-6" />
-              </div>
-              <CardTitle className="mt-3 font-heading text-2xl text-muted-foreground">
-                Perjalananmu belum selesai
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm leading-6 text-muted-foreground">
-                {journey.allStagesDone
-                  ? "Semua tahap sudah selesai. Halaman ini terbuka setelah evaluasi kasus terakhir dikonfirmasi oleh sistem."
-                  : "Halaman ini terbuka setelah kamu menyelesaikan semua misi yang ditentukan untukmu."}
-              </p>
-              <ul className="space-y-2">
-                {journey.cases.map((c) => (
-                  <li
-                    key={c.item.id}
-                    className="flex items-center justify-between gap-3 rounded-lg border bg-background/60 px-3 py-2 text-sm"
-                  >
-                    <span>
-                      Kasus {c.item.number} · {c.item.title}
-                    </span>
-                    <Badge variant={STATUS_VARIANT[c.status]}>
-                      {STATUS_LABEL[c.status]}
-                    </Badge>
-                  </li>
-                ))}
-              </ul>
-              {journey.allStagesDone && journey.lastCaseId ? (
-                <LinkButton href={`/case-review/${journey.lastCaseId}`}>
-                  Lihat evaluasi kasus terakhir
-                </LinkButton>
-              ) : (
-                journey.currentCaseId && (
-                  <LinkButton href={`/mission/${journey.currentCaseId}`}>
-                    Lanjutkan misi
-                  </LinkButton>
-                )
-              )}
-            </CardContent>
-          </Card>
-        </main>
-      </Shell>
-    );
-  }
+  const defaultStrengths = journey.complete
+    ? [
+        "Menguraikan masalah sebelum membuat kode",
+        "Menghubungkan algoritma dengan implementasi",
+        "Membaca bukti dari hasil pengujian",
+      ]
+    : [];
+  const shownStrengths = strengths.length > 0 ? strengths : defaultStrengths;
 
   return (
     <Shell>
@@ -157,15 +105,26 @@ function FinalReviewContent() {
         <div className="flex flex-col-reverse items-center gap-6 sm:flex-row sm:justify-between">
           <div>
             <p className="text-sm font-medium text-primary">
-              Perjalanan selesai
+              {journey.complete ? "Perjalanan selesai" : "Perjalanan saya"}
             </p>
             <h1 className="mt-2 font-heading text-3xl font-bold sm:text-4xl">
-              Kamu sudah membangun solusi dari awal.
+              {journey.complete
+                ? "Kamu sudah membangun solusi dari awal."
+                : "Ini progres belajarmu sejauh ini."}
             </h1>
             <p className="mt-3 max-w-2xl text-muted-foreground">
-              Gunakan ringkasan ini untuk melihat prosesmu, bukan hanya jawaban
-              akhirnya.
+              {journey.complete
+                ? "Gunakan ringkasan ini untuk melihat prosesmu, bukan hanya jawaban akhirnya."
+                : "Misi berikutnya terbuka setelah misi sebelumnya selesai."}
             </p>
+            {!journey.complete && journey.currentCaseId && (
+              <LinkButton
+                href={`/mission/${journey.currentCaseId}`}
+                className="mt-4"
+              >
+                Lanjutkan misi
+              </LinkButton>
+            )}
           </div>
           <Mascot
             variant="fullbody"
@@ -179,30 +138,53 @@ function FinalReviewContent() {
             journey.cases.length >= 3 ? "md:grid-cols-3" : "md:grid-cols-2",
           )}
         >
-          {journey.cases.map(({ item, status, completedStages }) => {
+          {journey.cases.map(({ item, status, completedStages, locked }) => {
             const score = scoreOf(item.id);
             return (
-              <Card key={item.id}>
+              <Card
+                key={item.id}
+                aria-disabled={locked || undefined}
+                data-testid={locked ? "case-card-locked" : "case-card"}
+                className={cn(locked && "bg-muted/60 text-muted-foreground")}
+              >
                 <CardHeader>
                   <div className="flex items-center justify-between gap-2">
                     <Badge variant="secondary" className="w-fit">
                       Kasus {item.number}
                     </Badge>
-                    <Badge variant={STATUS_VARIANT[status]}>
-                      {STATUS_LABEL[status]}
-                    </Badge>
+                    {locked ? (
+                      <Badge variant="outline" className="gap-1">
+                        <Lock className="size-3" /> Terkunci
+                      </Badge>
+                    ) : (
+                      <Badge variant={STATUS_VARIANT[status]}>
+                        {STATUS_LABEL[status]}
+                      </Badge>
+                    )}
                   </div>
-                  <CardTitle className="mt-2">{item.title}</CardTitle>
+                  <CardTitle
+                    className={cn("mt-2", locked && "text-muted-foreground")}
+                  >
+                    {item.title}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground">
-                  {completedStages} dari {stages.length} tahap selesai ·
-                  dukungan {item.support}
-                  {score && (
-                    <span className="mt-1 block text-xs">
-                      Skor sementara {score.score}/{score.max}
-                    </span>
+                  {locked ? (
+                    <span>Terbuka setelah misi sebelumnya selesai.</span>
+                  ) : (
+                    <>
+                      {completedStages} dari {stages.length} tahap selesai ·
+                      dukungan {item.support}
+                      {score && (
+                        <span className="mt-1 block text-xs">
+                          Skor sementara {score.score}/{score.max}
+                        </span>
+                      )}
+                      <span className="mt-1 block text-xs">
+                        {CASE_CARD_NOTE}
+                      </span>
+                    </>
                   )}
-                  <span className="mt-1 block text-xs">{CASE_CARD_NOTE}</span>
                 </CardContent>
               </Card>
             );
@@ -214,16 +196,21 @@ function FinalReviewContent() {
               <CardTitle>Yang sudah dikuasai</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-3 text-sm leading-6">
-                {(strengths.length > 0 ? strengths : defaultStrengths).map(
-                  (t) => (
+              {shownStrengths.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Selesaikan misimu untuk melihat apa saja yang sudah kamu
+                  kuasai.
+                </p>
+              ) : (
+                <ul className="space-y-3 text-sm leading-6">
+                  {shownStrengths.map((t) => (
                     <li key={t} className="flex gap-2">
                       <Check className="mt-0.5 size-4 shrink-0 text-primary" />
                       {t}
                     </li>
-                  ),
-                )}
-              </ul>
+                  ))}
+                </ul>
+              )}
             </CardContent>
           </Card>
           <Card>

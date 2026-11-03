@@ -9,6 +9,8 @@ export interface JourneyCase {
   status: JourneyCaseStatus;
   /** Stages the student has completed in this case (0-4). */
   completedStages: number;
+  /** Not reachable yet: it comes after the case the student is currently on. */
+  locked: boolean;
 }
 
 export interface Journey {
@@ -57,7 +59,13 @@ export function computeJourney(input: {
           : done > 0 || progress?.status === "IN_PROGRESS"
             ? "IN_PROGRESS"
             : "NOT_STARTED";
-      return { item, status, completedStages: done };
+      return { item, status, completedStages: done, locked: false };
+    });
+  // Everything after the first unfinished case is still locked.
+  const firstOpen = path.findIndex((c) => c.status !== "COMPLETED");
+  if (firstOpen !== -1)
+    path.forEach((c, i) => {
+      c.locked = i > firstOpen;
     });
 
   const last = path[path.length - 1];

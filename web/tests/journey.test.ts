@@ -61,6 +61,43 @@ const journey = (
     aiEnabled,
   });
 
+describe("computeJourney: locked cases", () => {
+  const locks = (j: ReturnType<typeof journey>) =>
+    j.cases.map((c) => [c.item.id, c.locked]);
+
+  it("locks every case after the one the student is on", () => {
+    expect(locks(journey([]))).toEqual([
+      ["case-1", false],
+      ["case-2", true],
+      ["case-3", true],
+    ]);
+  });
+
+  it("opens the next case once the previous one is completed", () => {
+    expect(locks(journey([progress("case-1", ALL)]))).toEqual([
+      ["case-1", false],
+      ["case-2", false],
+      ["case-3", true],
+    ]);
+  });
+
+  it("locks nothing when everything is done", () => {
+    const all = cases.map((c) => progress(c.id, ALL));
+    expect(journey(all).cases.every((c) => !c.locked)).toBe(true);
+  });
+
+  it("skipping a case moves the lock to the right place", () => {
+    const j = journey([
+      progress("case-1", ALL),
+      progress("case-2", [], "SKIPPED"),
+    ]);
+    expect(locks(j)).toEqual([
+      ["case-1", false],
+      ["case-3", false],
+    ]);
+  });
+});
+
 describe("computeJourney", () => {
   it("starts locked on the first case", () => {
     const j = journey([]);
