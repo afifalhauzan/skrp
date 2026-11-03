@@ -35,14 +35,17 @@ export default function Home() {
       <main className={cn(containerCls, "pb-12 pt-6 sm:pt-10")}>
         <Card className="p-0">
           <CardContent className="grid gap-8 p-5 sm:p-10 lg:grid-cols-[1.3fr_1fr] lg:items-center">
-            <div>
+            <div className="flex flex-col gap-1.5">
               <Badge variant="secondary">
-                Media pembelajaran Python berbasis Scaffolding · Kelas XII SMA
+                Media pembelajaran Python berbasis Scaffolding
               </Badge>
-              <h1 className="mt-4 font-heading text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+              <Badge variant="secondary">
+               Kelas XII SMA
+              </Badge>
+              <h1 className="mt-3 font-heading text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
                 Kuasai Python melalui pemecahan masalah terstruktur
               </h1>
-              <p className="mt-4 text-base leading-7 text-muted-foreground">
+              <p className="mt-2 text-base leading-7 text-muted-foreground">
                 Dari memahami masalah sampai kode berhasil dijalankan, kamu
                 bakal belajar langkah demi langkah. Ada teman belajar yang siap
                 kasih petunjuk saat kamu butuh. Makin lama, kamu makin jago
