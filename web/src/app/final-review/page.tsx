@@ -70,6 +70,13 @@ function FinalReviewContent() {
     router.push("/");
   };
   const journey = useJourney();
+  // Mission 1 is current and the student has not started it yet: a first-visit welcome.
+  const first = journey.cases[0];
+  const isFirstVisit =
+    !journey.complete &&
+    !!first &&
+    first.status === "NOT_STARTED" &&
+    journey.currentCaseId === first.item.id;
 
   // Real scores come from the backend's stage evaluations (live mode only).
   const scoreOf = (caseId: string) => {
@@ -116,19 +123,23 @@ function FinalReviewContent() {
             <h1 className="mt-2 font-heading text-3xl font-bold sm:text-4xl">
               {journey.complete
                 ? "Kamu sudah membangun solusi dari awal."
-                : "Ini progres belajarmu sejauh ini."}
+                : isFirstVisit
+                  ? "Selamat datang!"
+                  : "Ini progres belajarmu sejauh ini."}
             </h1>
             <p className="mt-3 max-w-2xl text-muted-foreground">
               {journey.complete
                 ? "Gunakan ringkasan ini untuk melihat prosesmu, bukan hanya jawaban akhirnya."
-                : "Misi berikutnya terbuka setelah misi sebelumnya selesai."}
+                : isFirstVisit
+                  ? "Mulai Misi anda disini."
+                  : "Misi berikutnya terbuka setelah misi sebelumnya selesai."}
             </p>
             {!journey.complete && journey.currentCaseId && (
               <LinkButton
                 href={`/mission/${journey.currentCaseId}`}
                 className="mt-4"
               >
-                Lanjutkan misi
+                {isFirstVisit ? "Mulai misi" : "Lanjutkan misi"}
               </LinkButton>
             )}
           </div>
