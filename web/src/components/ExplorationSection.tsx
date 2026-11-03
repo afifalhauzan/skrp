@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -15,35 +16,70 @@ import {
 } from "@/lib/strategy-copy";
 import type { CaseDefinition } from "@/lib/types";
 
+function IdeaBody({
+  idea,
+}: {
+  idea: CaseDefinition["exploration"]["ideas"][number];
+}) {
+  return (
+    <>
+      <p className="text-sm leading-6 text-muted-foreground">
+        {idea.description}
+      </p>
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <span className="text-xs text-muted-foreground">
+          Strategi yang relevan:
+        </span>
+        {idea.strategies.map((s) => (
+          <Badge key={s} variant="outline">
+            {s}
+          </Badge>
+        ))}
+      </div>
+      {idea.sampleData && (
+        <div className="mt-2">
+          <p className="text-xs text-muted-foreground">
+            Contoh data (satu transaksi per baris):
+          </p>
+          <pre className="mt-1 whitespace-pre-wrap rounded-md bg-muted p-2 font-mono text-xs">
+            {idea.sampleData}
+          </pre>
+        </div>
+      )}
+    </>
+  );
+}
+
+/** Ideas as accordion items (closed by default) so the briefing stays short, especially on mobile. */
+function IdeaAccordion({ item }: { item: CaseDefinition }) {
+  return (
+    <ul className="space-y-2">
+      {item.exploration.ideas.map((idea) => (
+        <li key={idea.title}>
+          <details className="group rounded-lg border bg-background">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden">
+              {idea.title}
+              <ChevronDown className="size-4 shrink-0 transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="border-t px-3 pb-3 pt-2">
+              <IdeaBody idea={idea} />
+            </div>
+          </details>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function Ideas({ item }: { item: CaseDefinition }) {
   return (
     <ul className="space-y-3">
       {item.exploration.ideas.map((idea) => (
         <li key={idea.title} className="rounded-lg border bg-background p-3">
           <p className="text-sm font-semibold">{idea.title}</p>
-          <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            {idea.description}
-          </p>
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <span className="text-xs text-muted-foreground">
-              Strategi yang relevan:
-            </span>
-            {idea.strategies.map((s) => (
-              <Badge key={s} variant="outline">
-                {s}
-              </Badge>
-            ))}
+          <div className="mt-1">
+            <IdeaBody idea={idea} />
           </div>
-          {idea.sampleData && (
-            <div className="mt-2">
-              <p className="text-xs text-muted-foreground">
-                Contoh data (satu transaksi per baris):
-              </p>
-              <pre className="mt-1 whitespace-pre-wrap rounded-md bg-muted p-2 font-mono text-xs">
-                {idea.sampleData}
-              </pre>
-            </div>
-          )}
         </li>
       ))}
     </ul>
@@ -65,7 +101,7 @@ export function ExplorationSection({ item }: { item: CaseDefinition }) {
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm font-semibold">Ide untuk kasus ini</p>
-        <Ideas item={item} />
+        <IdeaAccordion item={item} />
         <p className="text-sm leading-6 text-muted-foreground">
           {item.exploration.fit} {EXPLORATION_NOT_REQUIRED}
         </p>

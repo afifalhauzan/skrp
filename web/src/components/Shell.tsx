@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, UserRound } from "lucide-react";
 import { Logo } from "@/components/Logo";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -88,16 +88,15 @@ export function Shell({ children }: { children: React.ReactNode }) {
               {/* Mobile: the name stays visible on the button; the menu holds the details and "Keluar". */}
               <div className="md:hidden">
                 <DropdownMenu>
+                  {/* Styled directly (not via render={<Button/>}): the shadcn Button is not a
+                      forwardRef component under React 18, so the menu would lose its anchor. */}
                   <DropdownMenuTrigger
-                    render={
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        aria-label={`Menu akun ${displayName}`}
-                        data-testid="student-menu"
-                        className="max-w-28"
-                      />
-                    }
+                    aria-label={`Menu akun ${displayName}`}
+                    data-testid="student-menu"
+                    className={cn(
+                      buttonVariants({ variant: "outline", size: "sm" }),
+                      "max-w-28",
+                    )}
                   >
                     <UserRound />
                     <span
