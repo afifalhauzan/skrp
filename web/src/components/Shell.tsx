@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, UserRound } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -150,6 +151,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </nav>
         </div>
       </footer>
+      <ScrollToTop />
     </div>
   );
 }

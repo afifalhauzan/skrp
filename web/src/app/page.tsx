@@ -39,9 +39,7 @@ export default function Home() {
               <Badge variant="secondary">
                 Media pembelajaran Python berbasis Scaffolding
               </Badge>
-              <Badge variant="secondary">
-               Kelas XII SMA
-              </Badge>
+              <Badge variant="secondary">Kelas XII SMA</Badge>
               <h1 className="mt-3 font-heading text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
                 Kuasai Python melalui pemecahan masalah terstruktur
               </h1>
