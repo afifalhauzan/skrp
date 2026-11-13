@@ -223,8 +223,7 @@ export function EvaluationPanel({
 
         <p className="text-[11px] leading-4 text-muted-foreground">
           Penilaian AI ini bersifat sementara untuk membantu belajar, bukan
-          nilai akhir. Boleh atau tidaknya kamu lanjut ditentukan oleh aturan
-          aplikasi, bukan oleh AI.
+          nilai akhir.
         </p>
       </CardContent>
     </Card>
