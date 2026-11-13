@@ -19,3 +19,6 @@ next-env.d.ts
 *.log
 .DS_Store
 web/public/pyodide
+
+# load test output
+loadtest/results/
