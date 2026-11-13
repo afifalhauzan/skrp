@@ -39,7 +39,7 @@ export const STAGE_COPY: Record<StageId, string> = {
 
 /** Extra sentence for the study buddy, only where exploration is relevant. */
 export const ASSISTANT_STRATEGY_HINT =
-  "Selesaikan tugas inti dulu. Setelah itu, jika mau, kamu bisa menjelajahi strategi algoritmik opsional di bagian Eksplorasi Opsional; itu bukan syarat untuk lanjut.";
+  "Selesaikan tugas inti dulu. Setelah itu, jika mau, kamu bisa menjelajahi strategi algoritmik opsional.";
 export const ASSISTANT_HINT_STAGES: StageId[] = ["design", "implement"];
 
 /** Shown on the case review once the core task is done. */
