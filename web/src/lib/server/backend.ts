@@ -159,7 +159,13 @@ export async function forward({
 
   // Learner endpoints never legitimately answer 401/403 to the BFF: that means the shared
   // internal key is wrong or missing. Report it as a server fault, not as the learner's.
-  if (upstream.status === 401 || upstream.status === 403) {
+  // The one exception is a wrong student code/passcode on the login route: that IS the learner's.
+  const upstreamCode = (payload as { error?: { code?: unknown } } | null)?.error
+    ?.code;
+  if (
+    (upstream.status === 401 || upstream.status === 403) &&
+    upstreamCode !== "INVALID_CREDENTIALS"
+  ) {
     console.error(
       `[bff] ${method} ${path} rejected by API (${upstream.status}); check INTERNAL_API_KEY`,
     );

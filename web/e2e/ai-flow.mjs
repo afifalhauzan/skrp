@@ -14,6 +14,8 @@ const { chromium } = require("playwright");
 const BASE = process.env.BASE ?? "http://127.0.0.1:3002";
 const FAKE = process.env.FAKE ?? "http://127.0.0.1:4040";
 const CODE = process.env.CODE ?? "PY001";
+// The student's 4-character passcode (printed by `pnpm seed`; mock mode uses AB12 for PY001).
+const PASSCODE = process.env.PASSCODE ?? "AB12";
 
 const results = [];
 const check = (name, ok, extra = "") => {
@@ -48,6 +50,7 @@ await setMode({ evaluate: "ok", hint: "ok", delayMs: 0 });
 // ---- login + stage 1 -------------------------------------------------------
 await page.goto(`${BASE}/login`);
 await page.fill("#code", CODE);
+await page.fill("#passcode", PASSCODE);
 await page.click("button[type=submit]");
 await page.waitForURL("**/mission");
 await page.goto(`${BASE}/learn/case-1/understand`);

@@ -56,6 +56,31 @@ describe("BFF forward()", () => {
     expect((await res.json()).error.code).toBe("NOT_FOUND");
   });
 
+  it("passes a wrong-passcode 401 through, but still masks other 401s", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          { error: { code: "INVALID_CREDENTIALS", message: "nope" } },
+          401,
+        ),
+      ),
+    );
+    const res = await call();
+    expect(res.status).toBe(401);
+    expect((await res.json()).error.code).toBe("INVALID_CREDENTIALS");
+
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          jsonResponse({ error: { code: "UNAUTHORIZED", message: "x" } }, 401),
+        ),
+    );
+    expect((await call()).status).toBe(502);
+  });
+
   it("keeps the 5xx status but never forwards upstream internals", async () => {
     vi.stubGlobal(
       "fetch",

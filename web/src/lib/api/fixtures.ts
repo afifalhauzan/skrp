@@ -5,6 +5,15 @@ import type { StudentProfile } from "@skrp/shared";
  * students: the real roster is supplied later through the backend.
  * Codes follow the same PY### format the backend generates from attendance numbers.
  */
+export const MOCK_PASSCODES: Record<string, string> = {
+  PY001: "AB12",
+  PY002: "CD34",
+  PY003: "EF56",
+  VALIDATOR001: "VA11",
+  VALIDATOR002: "VA22",
+  DUMMY01: "DM01",
+};
+
 export const MOCK_STUDENTS: StudentProfile[] = [
   {
     studentCode: "PY001",

@@ -74,6 +74,9 @@ model Student {
   /// Null only for special accounts. Postgres allows many NULLs under a unique index.
   attendanceNumber Int?     @unique
   className        String?
+  /// 4 chars, A-Z0-9, unique per student. Filled by the seed (or on create); a student with
+  /// a null passcode cannot sign in. See src/lib/passcode.ts.
+  passcode         String?  @unique
   isActive         Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

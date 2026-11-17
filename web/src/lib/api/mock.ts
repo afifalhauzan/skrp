@@ -10,7 +10,7 @@ import type {
   SaveCodeRevisionResult,
   StageId,
 } from "@skrp/shared";
-import { MOCK_STUDENTS } from "./fixtures";
+import { MOCK_PASSCODES, MOCK_STUDENTS } from "./fixtures";
 import { ApiClientError, type ApiClient } from "./types";
 
 /**
@@ -62,6 +62,19 @@ export const mockClient: ApiClient = {
 
   async getStudent(code) {
     return requireStudent(code);
+  },
+
+  async login(code, passcode) {
+    const student = MOCK_STUDENTS.find(
+      (s) => s.studentCode === code.trim().toUpperCase(),
+    );
+    if (!student || MOCK_PASSCODES[student.studentCode] !== passcode)
+      throw new ApiClientError(
+        401,
+        "INVALID_CREDENTIALS",
+        "Kode siswa atau kata sandi salah.",
+      );
+    return student;
   },
 
   async getProgress(code): Promise<ProgressSnapshot> {

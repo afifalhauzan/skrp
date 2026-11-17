@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PASSCODE_PATTERN } from "../lib/passcode";
 import {
   normalizeStudentCode,
   MAX_ATTENDANCE_NUMBER,
@@ -41,6 +42,17 @@ export const artifactKindParam = z
   .string()
   .transform((value) => value.toUpperCase().replace(/-/g, "_"))
   .pipe(artifactKindSchema);
+
+/** Case-insensitive on input; stored and compared uppercase. */
+export const loginBody = z
+  .object({
+    passcode: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .regex(PASSCODE_PATTERN, "Passcode must be 4 letters or digits"),
+  })
+  .strict();
 
 // ---- students --------------------------------------------------------------
 

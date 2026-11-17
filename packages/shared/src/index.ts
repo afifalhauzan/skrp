@@ -18,6 +18,7 @@ export type ApiErrorCode =
   | "NOT_FOUND"
   | "CONFLICT"
   | "UNAUTHORIZED"
+  | "INVALID_CREDENTIALS"
   | "FORBIDDEN"
   | "PAYLOAD_TOO_LARGE"
   | "UPSTREAM_UNAVAILABLE"
@@ -60,9 +61,16 @@ export interface StudentRecord extends StudentProfile {
   id: string;
   /** Null for special accounts (e.g. VALIDATOR001). */
   attendanceNumber: number | null;
+  /** The student's sign-in passcode. Administrative view only; never in `StudentProfile`. */
+  passcode: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface LoginInput {
+  /** 4 characters, A-Z and 0-9. */
+  passcode: string;
 }
 
 export interface CreateStudentInput {
