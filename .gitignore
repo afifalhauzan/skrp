@@ -22,3 +22,6 @@ web/public/pyodide
 
 # load test output
 loadtest/results/
+
+# foto gform
+/forms
