@@ -4,6 +4,7 @@ import {
   createStudentBody,
   importStudentsBody,
   listStudentsQuery,
+  loginBody,
   studentCodeParam,
   updateStudentBody,
 } from "../validators";
@@ -14,6 +15,12 @@ export class StudentController {
   getProfile = async (req: Request, res: Response) => {
     const code = studentCodeParam.parse(req.params.studentCode);
     res.json({ data: await this.service.getProfile(code) });
+  };
+
+  login = async (req: Request, res: Response) => {
+    const code = studentCodeParam.parse(req.params.studentCode);
+    const { passcode } = loginBody.parse(req.body);
+    res.json({ data: await this.service.login(code, passcode) });
   };
 
   list = async (req: Request, res: Response) => {

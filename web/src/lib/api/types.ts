@@ -30,6 +30,8 @@ export interface ApiClient {
   /** True when this client can call the AI evaluation / assistance backend. */
   readonly aiEnabled: boolean;
   getStudent(studentCode: string): Promise<StudentProfile>;
+  /** Verifies the student's 4-character passcode and returns their profile. */
+  login(studentCode: string, passcode: string): Promise<StudentProfile>;
   getProgress(studentCode: string): Promise<ProgressSnapshot>;
   saveCaseProgress(
     studentCode: string,
@@ -89,6 +91,11 @@ export class ApiClientError extends Error {
 
   get isNotFound() {
     return this.status === 404;
+  }
+
+  /** Wrong student code or passcode on sign-in. */
+  get isInvalidCredentials() {
+    return this.code === "INVALID_CREDENTIALS";
   }
 
   /** The AI provider (not the student's work) is the problem; the work is kept. */

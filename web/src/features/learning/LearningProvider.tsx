@@ -149,7 +149,7 @@ interface LearningContextValue {
   saveState: SaveState;
   saveError: string | null;
 
-  login(studentCode: string): Promise<StudentProfile>;
+  login(studentCode: string, passcode: string): Promise<StudentProfile>;
   logout(): void;
   reload(): void;
   resetMock(): void;
@@ -348,9 +348,9 @@ export function LearningProvider({ children }: { children: ReactNode }) {
   }, [loadProgress]);
 
   const login = useCallback(
-    async (input: string) => {
+    async (input: string, passcode: string) => {
       const code = input.trim().toUpperCase();
-      const profile = await api.getStudent(code);
+      const profile = await api.login(code, passcode.trim().toUpperCase());
       cancelAllSaves();
       try {
         localStorage.setItem(SESSION_KEY, profile.studentCode);

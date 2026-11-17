@@ -24,6 +24,7 @@ export const toRecord = (s: DbStudent): StudentRecord => ({
   ...toProfile(s),
   id: s.id,
   attendanceNumber: s.attendanceNumber,
+  passcode: s.passcode,
   isActive: s.isActive,
   createdAt: s.createdAt.toISOString(),
   updatedAt: s.updatedAt.toISOString(),

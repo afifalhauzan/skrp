@@ -90,6 +90,9 @@ export const liveClient: ApiClient = {
   mode: "live",
   aiEnabled: true,
   getStudent: (code) => request("GET", `/students/${enc(code)}`),
+  // POST, not retried: a failed attempt counts toward the server's lockout.
+  login: (code, passcode) =>
+    request("POST", `/students/${enc(code)}/login`, { passcode }),
   getProgress: (code) => request("GET", `/students/${enc(code)}/progress`),
   saveCaseProgress: (code, caseId, input) =>
     request(

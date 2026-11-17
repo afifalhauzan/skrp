@@ -23,6 +23,7 @@ export function createApiRouter(
   router.patch("/students/:studentCode", admin, students.update);
 
   // Learner-facing
+  router.post("/students/:studentCode/login", students.login);
   router.get("/students/:studentCode", students.getProfile);
   router.get("/students/:studentCode/progress", progress.getSnapshot);
   router.put(

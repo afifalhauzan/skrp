@@ -60,6 +60,16 @@ describe("request handling", () => {
     expect(res.body.error.details[0].message).toMatch(/student code/i);
   });
 
+  it("rejects malformed passcodes on login with 400", async () => {
+    for (const passcode of ["abc", "ABCDE", "AB-1", ""]) {
+      const res = await request(makeApp())
+        .post("/api/students/PY001/login")
+        .send({ passcode });
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    }
+  });
+
   it("rejects malformed JSON and oversized bodies", async () => {
     const app = makeApp({ ADMIN_API_KEY: "a".repeat(20) });
     const bad = await request(app)

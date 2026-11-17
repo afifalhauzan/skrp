@@ -21,6 +21,9 @@ export const badRequest = (message: string, details?: AppError["details"]) =>
   new AppError(400, "VALIDATION_ERROR", message, details);
 export const unauthorized = (message = "Missing or invalid credentials") =>
   new AppError(401, "UNAUTHORIZED", message);
+/** Wrong student code or passcode. One message so neither can be probed on its own. */
+export const invalidCredentials = () =>
+  new AppError(401, "INVALID_CREDENTIALS", "Invalid student code or passcode");
 export const forbidden = (message = "Not allowed") =>
   new AppError(403, "FORBIDDEN", message);
 export const rateLimited = (message: string) =>

@@ -20,11 +20,14 @@ import { containerCls } from "@/lib/ui";
 import { cn } from "@/lib/utils";
 
 const CODE_FORMAT = /^(PY\d{3,}|VALIDATOR\d{3}|DUMMY\d{2})$/;
+/** Exactly 4 characters, uppercase letters and digits only (mirrors the API). */
+const PASSCODE_FORMAT = /^[A-Z0-9]{4}$/;
 
 export default function Login() {
   const router = useRouter();
   const { login, mode, student } = useLearning();
   const [code, setCode] = useState("");
+  const [passcode, setPasscode] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -40,15 +43,22 @@ export default function Login() {
       setError("Format kode siswa tidak sesuai. Contoh: PY001.");
       return;
     }
+    const secret = passcode.trim().toUpperCase();
+    if (!PASSCODE_FORMAT.test(secret)) {
+      setError("Kata sandi harus 4 karakter: huruf kapital atau angka.");
+      return;
+    }
     setBusy(true);
     try {
-      await login(value);
+      await login(value, secret);
       router.push("/final-review");
     } catch (err) {
-      if (err instanceof ApiClientError && err.isNotFound) {
+      if (err instanceof ApiClientError && err.isInvalidCredentials) {
         setError(
-          "Kode siswa tidak ditemukan. Periksa kembali kode dari gurumu.",
+          "Kode siswa atau kata sandi salah. Periksa kembali dari gurumu.",
         );
+      } else if (err instanceof ApiClientError && err.status === 429) {
+        setError("Terlalu banyak percobaan gagal. Tunggu beberapa menit lalu coba lagi.");
       } else if (err instanceof ApiClientError && err.isRetryable) {
         setError("Server tidak dapat dihubungi. Coba lagi sebentar lagi.");
       } else {
@@ -70,8 +80,8 @@ export default function Login() {
               Masukkan kode siswa
             </CardTitle>
             <CardDescription>
-              Gunakan kode siswa yang diberikan guru untuk membuka perjalanan
-              belajar.
+              Gunakan kode siswa dan kata sandi 4 karakter yang diberikan guru
+              untuk membuka perjalanan belajar.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -90,6 +100,29 @@ export default function Login() {
                   placeholder="Contoh: PY001"
                   className="h-10 uppercase"
                   autoComplete="off"
+                  aria-required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="passcode" required>
+                  Kata sandi
+                </Label>
+                <Input
+                  id="passcode"
+                  type="password"
+                  value={passcode}
+                  onChange={(e) => {
+                    setPasscode(
+                      e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""),
+                    );
+                    setError("");
+                  }}
+                  placeholder="4 huruf/angka"
+                  maxLength={4}
+                  className="h-10 uppercase tracking-widest"
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
                   aria-required
                 />
                 <RequiredNote />

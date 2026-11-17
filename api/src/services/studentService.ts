@@ -1,15 +1,42 @@
 import type { Student } from "@prisma/client";
 import type { StudentProfile, StudentRecord } from "@skrp/shared";
 import { Prisma } from "../lib/prisma";
-import { conflict, notFound } from "../lib/errors";
+import { conflict, invalidCredentials, notFound, rateLimited } from "../lib/errors";
+import { LoginThrottle } from "../lib/loginThrottle";
 import { toProfile, toRecord } from "../lib/mappers";
+import { passcodesMatch } from "../lib/passcode";
 import type {
   StudentRepository,
   StudentFields,
 } from "../repositories/studentRepository";
 
 export class StudentService {
-  constructor(private readonly students: StudentRepository) {}
+  constructor(
+    private readonly students: StudentRepository,
+    private readonly throttle = new LoginThrottle(),
+  ) {}
+
+  /**
+   * Student sign-in. Unknown code, inactive student, missing passcode and wrong passcode all
+   * produce the same error so none of them can be told apart from the outside.
+   */
+  async login(studentCode: string, passcode: string): Promise<StudentProfile> {
+    const wait = this.throttle.retryAfterSeconds(studentCode);
+    if (wait > 0)
+      throw rateLimited(
+        `Too many failed attempts. Try again in ${Math.ceil(wait / 60)} minute(s).`,
+      );
+
+    const student = await this.students.findByCode(studentCode);
+    const ok =
+      !!student?.isActive && passcodesMatch(passcode, student.passcode);
+    if (!ok) {
+      this.throttle.recordFailure(studentCode);
+      throw invalidCredentials();
+    }
+    this.throttle.reset(studentCode);
+    return toProfile(student);
+  }
 
   /** Learner-facing lookup. Inactive students are treated as not found. */
   async getActiveStudent(studentCode: string): Promise<Student> {

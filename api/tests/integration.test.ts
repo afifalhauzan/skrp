@@ -165,6 +165,44 @@ describe.skipIf(!url)("API with PostgreSQL", () => {
       expect(list.body.data.students).toHaveLength(1);
     });
 
+    it("gives every student a unique 4-char passcode and signs in with it", async () => {
+      const roster = {
+        students: Array.from({ length: 20 }, (_, i) => ({
+          attendanceNumber: i + 1,
+        })),
+      };
+      await api().adminPost("/api/students/import").send(roster);
+      const list = await api().adminGet("/api/students?limit=50");
+      const passcodes: string[] = list.body.data.students.map(
+        (s: { passcode: string }) => s.passcode,
+      );
+      expect(passcodes).toHaveLength(20);
+      expect(new Set(passcodes).size).toBe(20);
+      for (const p of passcodes) expect(p).toMatch(/^[A-Z0-9]{4}$/);
+
+      // Re-importing never rotates a passcode.
+      await api().adminPost("/api/students/import").send(roster);
+      const again = await api().adminGet("/api/students?limit=50");
+      expect(
+        again.body.data.students.map((s: { passcode: string }) => s.passcode),
+      ).toEqual(passcodes);
+
+      const first = list.body.data.students[0];
+      const ok = await api()
+        .post(`/api/students/${first.studentCode}/login`)
+        .send({ passcode: first.passcode.toLowerCase() });
+      expect(ok.status).toBe(200);
+      expect(ok.body.data.studentCode).toBe(first.studentCode);
+      expect(ok.body.data.passcode).toBeUndefined();
+
+      const other = list.body.data.students[1];
+      const wrong = await api()
+        .post(`/api/students/${first.studentCode}/login`)
+        .send({ passcode: other.passcode });
+      expect(wrong.status).toBe(401);
+      expect(wrong.body.error.code).toBe("INVALID_CREDENTIALS");
+    });
+
     it("treats unknown and inactive students as 404", async () => {
       expect((await api().get("/api/students/PY404")).status).toBe(404);
       await api().adminPost("/api/students").send({ attendanceNumber: 2 });
