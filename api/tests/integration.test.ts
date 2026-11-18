@@ -276,7 +276,13 @@ describe.skipIf(!url)("API with PostgreSQL", () => {
 
       const other = await api().get("/api/students/PY002/progress");
       expect(other.body.data.cases).toEqual([]);
-      expect(other.body.data.artifacts).toEqual([]);
+      // PY002 sees only the backend's starter scaffold, never PY001's saved text.
+      expect(other.body.data.artifacts).toHaveLength(1);
+      expect(other.body.data.artifacts[0]).toMatchObject({
+        caseId: "case-1",
+        kind: "PSEUDOCODE",
+      });
+      expect(other.body.data.artifacts[0].content).not.toBe("MULAI");
       const mine = await api().get("/api/students/PY001/progress");
       expect(mine.body.data.cases).toHaveLength(1);
       expect(mine.body.data.artifacts[0]).toMatchObject({

@@ -8,6 +8,7 @@ import type {
 } from "@skrp/shared";
 import type { Prisma } from "@prisma/client";
 import { Prisma as PrismaNs } from "../lib/prisma";
+import { CASES } from "../config/cases";
 import { badRequest, conflict, invalidState } from "../lib/errors";
 import { toRouting } from "../lib/aiMappers";
 import type { AiRepository } from "../repositories/aiRepository";
@@ -44,10 +45,25 @@ export class ProgressService {
         this.evaluations.latestForSnapshot(student.id),
         this.ai.latestDecisions(student.id),
       ]);
+    const mapped = artifacts.map(toArtifact);
+    // Backend-injected starter pseudocode for students with no saved pseudocode yet.
+    for (const c of CASES) {
+      if (
+        c.pseudocodeScaffold &&
+        !mapped.some((a) => a.caseId === c.id && a.kind === "PSEUDOCODE")
+      ) {
+        mapped.push({
+          caseId: c.id,
+          kind: "PSEUDOCODE",
+          content: c.pseudocodeScaffold,
+          updatedAt: student.createdAt.toISOString(),
+        });
+      }
+    }
     return {
       student: toProfile(student),
       cases: cases.map(toCaseProgress),
-      artifacts: artifacts.map(toArtifact),
+      artifacts: mapped,
       latestCode: latestCode.map(toCodeRevision),
       stageEvaluations,
       routing: decisions.map(toRouting),

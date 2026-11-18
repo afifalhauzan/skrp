@@ -25,6 +25,11 @@ export interface CaseConfig {
   expected: string;
   rules: string[];
   tests: CaseTest[];
+  /**
+   * Starter pseudocode shown in the design stage to every student who has not saved their
+   * own. Served virtually in the progress snapshot (never persisted or evaluated as student work).
+   */
+  pseudocodeScaffold?: string;
 }
 
 export const CASES: readonly CaseConfig[] = [
@@ -33,6 +38,18 @@ export const CASES: readonly CaseConfig[] = [
     number: 1,
     title: "Sistem otomasi perhitungan tarif parkir progresif",
     support: "HIGH",
+    pseudocodeScaffold: [
+      "MULAI",
+      "  BACA jenis_kendaraan",
+      "  BACA lama_parkir",
+      "  JIKA jenis_kendaraan adalah mobil MAKA",
+      "    ... (hitung tarif mobil: jam pertama + jam berikutnya)",
+      "  JIKA TIDAK",
+      "    ... (hitung tarif motor: jam pertama + jam berikutnya)",
+      "  ... (pastikan tarif tidak melebihi batas maksimum per hari)",
+      "  TAMPILKAN tarif",
+      "SELESAI",
+    ].join("\n"),
     goal: "Buat program Python yang menghitung biaya parkir mobil atau motor dengan aturan tarif bertingkat.",
     expected:
       "Program menerima jenis kendaraan dan lama parkir, lalu menampilkan biaya parkir yang sesuai.",
