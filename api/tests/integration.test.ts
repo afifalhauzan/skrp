@@ -283,6 +283,12 @@ describe.skipIf(!url)("API with PostgreSQL", () => {
         kind: "PSEUDOCODE",
       });
       expect(other.body.data.artifacts[0].content).not.toBe("MULAI");
+      // ...and a virtual (unsaved) revision 0 of the scaffolded starter code.
+      expect(other.body.data.latestCode).toHaveLength(1);
+      expect(other.body.data.latestCode[0]).toMatchObject({
+        caseId: "case-1",
+        revision: 0,
+      });
       const mine = await api().get("/api/students/PY001/progress");
       expect(mine.body.data.cases).toHaveLength(1);
       expect(mine.body.data.artifacts[0]).toMatchObject({

@@ -30,6 +30,11 @@ export interface CaseConfig {
    * own. Served virtually in the progress snapshot (never persisted or evaluated as student work).
    */
   pseudocodeScaffold?: string;
+  /**
+   * Heavily scaffolded starter Python for the implement stage, for students with no saved
+   * code revision. Served virtually (revision 0) in the progress snapshot; never persisted.
+   */
+  codeScaffold?: string;
 }
 
 export const CASES: readonly CaseConfig[] = [
@@ -49,6 +54,36 @@ export const CASES: readonly CaseConfig[] = [
       "  ... (pastikan tarif tidak melebihi batas maksimum per hari)",
       "  TAMPILKAN tarif",
       "SELESAI",
+    ].join("\n"),
+    codeScaffold: [
+      "# Kasus 1: tarif parkir progresif (kerangka kode, lengkapi bagian TODO)",
+      "",
+      "# --- 1. Aturan tarif (sesuai soal) ---",
+      "TARIF_MOBIL_JAM_PERTAMA = 5000",
+      "TARIF_MOBIL_JAM_BERIKUTNYA = 3000",
+      "BATAS_MOBIL = 20000",
+      "",
+      "TARIF_MOTOR_JAM_PERTAMA = 0  # TODO: isi sesuai aturan motor",
+      "TARIF_MOTOR_JAM_BERIKUTNYA = 0  # TODO: isi sesuai aturan motor",
+      "BATAS_MOTOR = 0  # TODO: isi sesuai aturan motor",
+      "",
+      "# --- 2. Input ---",
+      'jenis = input("Jenis kendaraan (mobil/motor): ")',
+      'jam = int(input("Lama parkir (jam): "))',
+      "",
+      "# --- 3. Proses ---",
+      'if jenis == "mobil":',
+      "    # biaya = jam pertama + (jam - 1) * tarif jam berikutnya",
+      "    tarif = TARIF_MOBIL_JAM_PERTAMA + (jam - 1) * TARIF_MOBIL_JAM_BERIKUTNYA",
+      "    # TODO: jika tarif lebih besar dari BATAS_MOBIL, ubah tarif menjadi BATAS_MOBIL",
+      "else:",
+      "    # TODO: hitung tarif motor dengan pola yang sama seperti mobil",
+      "    tarif = 0",
+      "    # TODO: terapkan BATAS_MOTOR",
+      "",
+      "# --- 4. Output ---",
+      'print(f"Tarif: {tarif}")',
+      "",
     ].join("\n"),
     goal: "Buat program Python yang menghitung biaya parkir mobil atau motor dengan aturan tarif bertingkat.",
     expected:

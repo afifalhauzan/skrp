@@ -60,11 +60,25 @@ export class ProgressService {
         });
       }
     }
+    // Same idea for code: a virtual revision 0 (never stored) until the student saves their own.
+    const code = latestCode.map(toCodeRevision);
+    for (const c of CASES) {
+      if (c.codeScaffold && !code.some((r) => r.caseId === c.id)) {
+        code.push({
+          caseId: c.id,
+          revision: 0,
+          source: c.codeScaffold,
+          stdin: c.tests[0]?.stdin ?? "",
+          execution: null,
+          createdAt: student.createdAt.toISOString(),
+        });
+      }
+    }
     return {
       student: toProfile(student),
       cases: cases.map(toCaseProgress),
       artifacts: mapped,
-      latestCode: latestCode.map(toCodeRevision),
+      latestCode: code,
       stageEvaluations,
       routing: decisions.map(toRouting),
     };
